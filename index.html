@@ -1,0 +1,1909 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TutoBalzac — Plateforme de Tutorat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ========== RESET & VARIABLES ========== */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f8f5f0;--ink:#111;--accent:#1a3cff;--yellow:#f5d435;
+  --success:#1db954;--danger:#e53e3e;--muted:#7a7670;--border:#e5e2dd;
+  --card:#fff;--sidebar-w:260px;--topbar-h:64px;--radius:12px;
+  --shadow:0 2px 12px rgba(0,0,0,.06);
+  --font-h:'Syne',sans-serif;--font-b:'Instrument Sans',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-b);background:var(--bg);color:var(--ink);line-height:1.6;font-size:15px;overflow-x:hidden}
+a{color:var(--accent);text-decoration:none}
+img{max-width:100%}
+h1,h2,h3,h4{font-family:var(--font-h);font-weight:800;line-height:1.2}
+h1{font-size:28px}h2{font-size:22px}h3{font-size:18px}h4{font-size:15px}
+
+/* ========== LAYOUT ========== */
+#app{display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar-w);background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .3s ease}
+.sidebar-header{padding:20px 24px;border-bottom:1px solid var(--border)}
+.sidebar-header h2{font-size:20px;display:flex;align-items:center;gap:8px}
+.sidebar-header span.sub{font-family:var(--font-b);font-size:12px;font-weight:400;color:var(--muted);display:block;margin-top:2px}
+.sidebar-nav{flex:1;padding:12px;overflow-y:auto}
+.nav-section{margin-bottom:16px}
+.nav-section-title{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);padding:8px 12px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;color:var(--ink);transition:all .15s ease;user-select:none}
+.nav-item:hover{background:var(--bg)}
+.nav-item.active{background:var(--accent);color:#fff}
+.nav-item .badge{margin-left:auto;background:var(--danger);color:#fff;font-size:11px;padding:2px 7px;border-radius:10px;font-weight:600}
+.sidebar-footer{padding:16px 24px;border-top:1px solid var(--border)}
+.role-switcher{display:flex;gap:4px;background:var(--bg);border-radius:8px;padding:4px}
+.role-btn{flex:1;padding:6px 4px;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);font-family:var(--font-b);transition:all .15s}
+.role-btn.active{background:var(--accent);color:#fff}
+.main-wrapper{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{height:var(--topbar-h);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:90}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-left h1{font-size:22px}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.notif-btn{position:relative;background:none;border:none;font-size:22px;cursor:pointer;padding:6px}
+.notif-btn .notif-count{position:absolute;top:0;right:0;background:var(--danger);color:#fff;font-size:10px;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700}
+.user-pill{display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg);border-radius:20px;font-size:13px;font-weight:600}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.main-content{flex:1;padding:32px;max-width:1200px;width:100%}
+.hamburger{display:none;background:none;border:none;font-size:24px;cursor:pointer}
+
+/* ========== CARDS ========== */
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:24px;box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,.08)}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.card-grid{display:grid;gap:20px}
+.grid-2{grid-template-columns:repeat(2,1fr)}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+.grid-4{grid-template-columns:repeat(4,1fr)}
+.stat-card{text-align:center;padding:20px}
+.stat-card .stat-value{font-size:32px;font-weight:800;font-family:var(--font-h);color:var(--accent)}
+.stat-card .stat-label{font-size:13px;color:var(--muted);margin-top:4px}
+.section-title{font-size:18px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+
+/* ========== BUTTONS ========== */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-b);transition:all .15s;line-height:1.4}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#1430cc}
+.btn-success{background:var(--success);color:#fff}.btn-success:hover{background:#17a349}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#c53030}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--ink)}.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-yellow{background:var(--yellow);color:var(--ink)}.btn-yellow:hover{background:#e6c52e}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-lg{padding:12px 24px;font-size:15px}
+.btn-icon{padding:8px;border-radius:8px;background:var(--bg);border:none;cursor:pointer;font-size:18px}
+
+/* ========== FORMS ========== */
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--ink)}
+.form-input,.form-select,.form-textarea{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font-b);background:var(--card);color:var(--ink);transition:border-color .15s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--accent)}
+.form-textarea{resize:vertical;min-height:80px}
+.search-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--bg);border-radius:10px;border:1.5px solid transparent;transition:border-color .15s}
+.search-bar:focus-within{border-color:var(--accent);background:var(--card)}
+.search-bar input{border:none;background:transparent;font-size:14px;font-family:var(--font-b);flex:1;outline:none}
+
+/* ========== TABLES ========== */
+.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px 16px;text-align:left;font-size:13px;border-bottom:1px solid var(--border)}
+th{background:var(--bg);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(26,60,255,.02)}
+
+/* ========== CALENDAR ========== */
+.calendar{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
+.cal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:var(--bg)}
+.cal-header h3{font-size:16px}
+.cal-nav{display:flex;gap:8px}
+.cal-nav button{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--card);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.cal-day-header{padding:8px;text-align:center;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase}
+.cal-day{min-height:90px;padding:6px 8px;border-top:1px solid var(--border);border-right:1px solid var(--border);position:relative;cursor:pointer;transition:background .15s}
+.cal-day:nth-child(7n){border-right:none}
+.cal-day:hover{background:rgba(26,60,255,.03)}
+.cal-day.today{background:rgba(26,60,255,.06)}
+.cal-day.other-month{color:var(--muted);opacity:.4}
+.cal-day .day-num{font-size:12px;font-weight:600}
+.cal-event{font-size:10px;padding:2px 5px;border-radius:4px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.cal-event.confirmed{background:rgba(26,60,255,.1);color:var(--accent)}
+.cal-event.pending{background:rgba(245,212,53,.3);color:#9a7e00}
+.cal-event.completed{background:rgba(29,185,84,.1);color:var(--success)}
+.cal-event.group{border-left:3px solid var(--yellow)}
+.week-view{display:grid;grid-template-columns:60px repeat(7,1fr);gap:0}
+.week-time{padding:4px 8px;font-size:11px;color:var(--muted);text-align:right;border-right:1px solid var(--border);height:50px;display:flex;align-items:flex-start;justify-content:flex-end}
+.week-slot{border-right:1px solid var(--border);border-bottom:1px solid var(--border);min-height:50px;padding:2px;position:relative}
+.week-slot:nth-child(7n+1){border-right:none}
+.week-event{position:absolute;left:2px;right:2px;background:var(--accent);color:#fff;border-radius:6px;padding:4px 6px;font-size:11px;font-weight:500;cursor:pointer;z-index:2}
+
+/* ========== CHAT ========== */
+.chat-container{display:flex;height:500px;border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;background:var(--card)}
+.chat-sidebar{width:240px;border-right:1px solid var(--border);display:flex;flex-direction:column}
+.chat-sidebar-header{padding:16px;border-bottom:1px solid var(--border)}
+.chat-contact{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;transition:background .15s}
+.chat-contact:hover,.chat-contact.active{background:var(--bg)}
+.chat-contact .contact-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.chat-contact .contact-info{flex:1;min-width:0}
+.chat-contact .contact-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-contact .contact-preview{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-contact .unread-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.chat-main{flex:1;display:flex;flex-direction:column}
+.chat-header{padding:14px 20px;border-bottom:1px solid var(--border);font-weight:600;font-size:14px;display:flex;align-items:center;gap:10px}
+.chat-messages{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px}
+.chat-msg{max-width:70%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5;animation:fadeUp .2s ease}
+.chat-msg.sent{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.chat-msg.received{align-self:flex-start;background:var(--bg);border-bottom-left-radius:4px}
+.chat-msg .msg-time{font-size:10px;opacity:.6;margin-top:4px}
+.chat-input-area{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center}
+.chat-input-area input{flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;font-family:var(--font-b);outline:none}
+.chat-input-area input:focus{border-color:var(--accent)}
+
+/* ========== MODAL ========== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s ease;padding:20px}
+.modal{background:var(--card);border-radius:16px;max-width:700px;width:100%;max-height:85vh;overflow-y:auto;animation:slideUp .3s ease;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--card);z-index:1;border-radius:16px 16px 0 0}
+.modal-header h2{font-size:18px}
+.modal-close{width:32px;height:32px;border-radius:8px;border:none;background:var(--bg);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+
+/* ========== NOTIFICATION DROPDOWN ========== */
+.notif-dropdown{position:absolute;top:100%;right:0;width:360px;background:var(--card);border-radius:var(--radius);border:1px solid var(--border);box-shadow:0 10px 40px rgba(0,0,0,.12);z-index:200;animation:fadeIn .15s ease;max-height:400px;overflow-y:auto}
+.notif-dropdown-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:14px}
+.notif-item{display:flex;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.notif-item:hover{background:var(--bg)}
+.notif-item.unread{background:rgba(26,60,255,.03)}
+.notif-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.notif-text{flex:1;font-size:13px;line-height:1.4}
+.notif-time{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ========== TEACHER PROFILE ========== */
+.profile-hero{display:flex;gap:24px;margin-bottom:32px}
+.profile-photo{width:120px;height:120px;border-radius:16px;background:linear-gradient(135deg,var(--accent),#6366f1);display:flex;align-items:center;justify-content:center;font-size:48px;color:#fff;flex-shrink:0}
+.profile-info{flex:1}
+.profile-info h1{font-size:26px;display:flex;align-items:center;gap:8px}
+.verified-badge{background:var(--success);color:#fff;font-size:11px;padding:3px 8px;border-radius:6px;font-weight:600;font-family:var(--font-b)}
+.profile-tags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.tag{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:500;background:var(--bg);border:1px solid var(--border)}
+.tag.accent{background:rgba(26,60,255,.08);color:var(--accent);border-color:rgba(26,60,255,.15)}
+.tag.yellow{background:rgba(245,212,53,.2);color:#9a7e00;border-color:rgba(245,212,53,.4)}
+
+/* ========== VIRTUAL CLASSROOM ========== */
+.classroom-layout{display:grid;grid-template-columns:1fr 340px;gap:20px;min-height:600px}
+.classroom-main{display:flex;flex-direction:column;gap:16px}
+.zoom-placeholder{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:var(--radius);height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:12px}
+.zoom-placeholder .zoom-icon{font-size:48px}
+.classroom-toolbar{display:flex;gap:8px;flex-wrap:wrap}
+.toolbar-btn{display:flex;align-items:center;gap:6px;padding:10px 16px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;font-size:13px;font-weight:500;font-family:var(--font-b);transition:all .15s}
+.toolbar-btn:hover{border-color:var(--accent);color:var(--accent)}
+.toolbar-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.toolbar-btn.danger{border-color:var(--danger);color:var(--danger)}
+.shared-notepad{border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;min-height:150px;font-family:var(--font-b);font-size:13px;line-height:1.6;outline:none;resize:vertical}
+.shared-notepad:focus{border-color:var(--accent)}
+.classroom-sidebar{display:flex;flex-direction:column;gap:16px}
+.qa-panel{border:1px solid var(--border);border-radius:var(--radius);flex:1;display:flex;flex-direction:column;background:var(--card)}
+.qa-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;max-height:350px}
+.qa-input{display:flex;gap:6px;padding:10px;border-top:1px solid var(--border)}
+.qa-input input{flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:var(--font-b);outline:none}
+.hand-indicator{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(245,212,53,.2);border-radius:6px;font-size:12px;font-weight:600;animation:pulse 1s infinite}
+
+/* ========== PROGRESS ========== */
+.chart-container{position:relative;height:280px;width:100%}
+.radar-container{position:relative;height:300px;max-width:400px;margin:0 auto}
+.streak-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:linear-gradient(135deg,var(--yellow),#f0c000);border-radius:10px;font-size:14px;font-weight:700}
+.progress-bar{height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
+.progress-bar .fill{height:100%;border-radius:4px;transition:width .5s ease}
+.trend-up{color:var(--success)}
+.trend-down{color:var(--danger)}
+.trend-flat{color:var(--muted)}
+
+/* ========== STARS ========== */
+.stars{display:inline-flex;gap:2px;font-size:18px;cursor:pointer}
+.stars .star{color:var(--border);transition:color .1s}
+.stars .star.filled{color:var(--yellow)}
+
+/* ========== TABS ========== */
+.tabs{display:flex;gap:4px;padding:4px;background:var(--bg);border-radius:10px;margin-bottom:20px}
+.tab-btn{padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);font-family:var(--font-b);transition:all .15s}
+.tab-btn.active{background:var(--card);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.06)}
+
+/* ========== MISC ========== */
+.empty-state{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty-state .empty-icon{font-size:48px;margin-bottom:12px}
+.divider{height:1px;background:var(--border);margin:24px 0}
+.flex{display:flex}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-between{justify-content:space-between}.gap-8{gap:8px}.gap-12{gap:12px}.gap-16{gap:16px}.gap-20{gap:20px}.gap-24{gap:24px}
+.mt-8{margin-top:8px}.mt-16{margin-top:16px}.mt-24{margin-top:24px}.mb-8{margin-bottom:8px}.mb-16{margin-bottom:16px}.mb-24{margin-bottom:24px}
+.text-sm{font-size:13px}.text-xs{font-size:11px}.text-muted{color:var(--muted)}.text-accent{color:var(--accent)}.text-success{color:var(--success)}.text-danger{color:var(--danger)}.font-bold{font-weight:700}
+.w-full{width:100%}
+.pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.pill-blue{background:rgba(26,60,255,.1);color:var(--accent)}
+.pill-green{background:rgba(29,185,84,.1);color:var(--success)}
+.pill-yellow{background:rgba(245,212,53,.3);color:#9a7e00}
+.pill-red{background:rgba(229,62,62,.1);color:var(--danger)}
+.pill-gray{background:var(--bg);color:var(--muted)}
+.drop-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:40px;text-align:center;color:var(--muted);cursor:pointer;transition:all .15s}
+.drop-zone:hover{border-color:var(--accent);background:rgba(26,60,255,.02)}
+.forum-post{padding:16px;border-bottom:1px solid var(--border)}
+.forum-post:last-child{border-bottom:none}
+.announce-card{border-left:4px solid var(--accent);padding:16px;background:rgba(26,60,255,.02);border-radius:0 var(--radius) var(--radius) 0;margin-bottom:12px}
+
+/* ========== ANIMATIONS ========== */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.fade-in{animation:fadeIn .3s ease}
+.fade-up{animation:fadeUp .3s ease}
+.stagger>*{animation:fadeUp .3s ease both}
+.stagger>*:nth-child(1){animation-delay:0s}
+.stagger>*:nth-child(2){animation-delay:.05s}
+.stagger>*:nth-child(3){animation-delay:.1s}
+.stagger>*:nth-child(4){animation-delay:.15s}
+.stagger>*:nth-child(5){animation-delay:.2s}
+.stagger>*:nth-child(6){animation-delay:.25s}
+
+/* ========== RESPONSIVE ========== */
+@media(max-width:1024px){
+  .grid-4{grid-template-columns:repeat(2,1fr)}
+  .classroom-layout{grid-template-columns:1fr}
+  .profile-hero{flex-direction:column;align-items:center;text-align:center}
+}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main-wrapper{margin-left:0}
+  .hamburger{display:flex}
+  .topbar{padding:0 16px}
+  .main-content{padding:16px}
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+  .chat-container{flex-direction:column;height:auto}
+  .chat-sidebar{width:100%;max-height:200px;overflow-y:auto}
+  .calendar .cal-day{min-height:60px}
+  .modal{margin:10px;max-height:90vh}
+  .notif-dropdown{width:calc(100vw - 32px);right:-60px}
+  .bottom-nav{display:flex}
+}
+@media(min-width:769px){.bottom-nav{display:none}}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);z-index:100;justify-content:space-around;padding:8px 0}
+.bottom-nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer;padding:4px 8px}
+.bottom-nav-item.active{color:var(--accent)}
+.bottom-nav-item .bnav-icon{font-size:20px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ================================================================
+   TUTOBALZAC — COMPLETE APPLICATION
+   ================================================================ */
+
+// ========== STATE ==========
+const S = {
+  role: 'student',
+  page: 'dashboard',
+  subpage: null,
+  modal: null,
+  modalData: null,
+  selectedChat: 0,
+  notifOpen: false,
+  sidebarOpen: false,
+  calView: 'month',
+  calDate: new Date(2026, 2, 1),
+  classroomSession: null,
+  classroomChat: [],
+  classroomNotes: 'Notes partagées — commencez à écrire ici...',
+  raisedHands: {},
+  searchQuery: '',
+  calWeekStart: null,
+  forumSubject: 'Mathématiques',
+};
+
+// ========== SEED DATA ==========
+const teachers = [
+  {id:'t1',name:'Mme Sophie Dupont',initials:'SD',subjects:['Mathématiques'],levels:['Terminale','Prépa'],style:['Méthode rigoureuse','Exercices intensifs'],bio:'Agrégée de mathématiques, 12 ans d\'expérience en classes préparatoires.',rating:4.8,reviews:47,totalStudents:124,totalHours:860,avgImprovement:'+2.3 pts',priceSolo:35,priceGroup:18,pricePack:280,verified:true,color:'#1a3cff',avail:{1:[17,18,19],3:[17,18,19],5:[14,15,16]}},
+  {id:'t2',name:'M. Jean Laurent',initials:'JL',subjects:['Physique-Chimie'],levels:['Seconde','Première','Terminale'],style:['Exercices intensifs','Expériences pratiques'],bio:'Docteur en physique, passionné par l\'enseignement expérimental.',rating:4.6,reviews:35,totalStudents:89,totalHours:620,avgImprovement:'+1.8 pts',priceSolo:32,priceGroup:16,pricePack:250,verified:true,color:'#e53e3e',avail:{2:[16,17,18],4:[16,17,18],6:[10,11]}},
+  {id:'t3',name:'Mme Claire Moreau',initials:'CM',subjects:['Français','Philosophie'],levels:['Première','Terminale'],style:['Méthode Socratique','Bienveillant'],bio:'Normalienne, spécialiste de la dissertation et du commentaire composé.',rating:4.9,reviews:62,totalStudents:156,totalHours:1100,avgImprovement:'+2.7 pts',priceSolo:38,priceGroup:20,pricePack:300,verified:true,color:'#9333ea',avail:{1:[14,15],2:[14,15],4:[14,15],5:[17,18]}},
+  {id:'t4',name:'M. Pierre Bernard',initials:'PB',subjects:['Histoire-Géographie'],levels:['Seconde','Première','Terminale'],style:['Bienveillant','Méthode chronologique'],bio:'Certifié d\'histoire-géo, spécialiste de géopolitique contemporaine.',rating:4.5,reviews:28,totalStudents:67,totalHours:430,avgImprovement:'+1.5 pts',priceSolo:30,priceGroup:15,pricePack:230,verified:true,color:'#059669',avail:{1:[18,19],3:[18,19],5:[18,19]}},
+  {id:'t5',name:'Mme Isabelle Petit',initials:'IP',subjects:['Anglais'],levels:['Seconde','Première','Terminale','Prépa'],style:['Immersion totale','Conversation libre'],bio:'Bilingue franco-américaine, certifiée Cambridge. Approche communicative.',rating:4.7,reviews:41,totalStudents:103,totalHours:740,avgImprovement:'+2.1 pts',priceSolo:33,priceGroup:17,pricePack:260,verified:true,color:'#f59e0b',avail:{2:[17,18,19],3:[14,15],6:[10,11,12]}}
+];
+
+const students = [
+  {id:'s1',name:'Lucas Martin',initials:'LM',level:'Terminale S',subjects:['Mathématiques','Physique-Chimie'],enrolled:['t1','t2'],grades:{Mathématiques:[12,13,11,14,13,15,14,16],['Physique-Chimie']:[11,12,10,13,12,14,13,15]},hwCompleted:14,hwTotal:18,sessionsAttended:22,streak:5},
+  {id:'s2',name:'Emma Dubois',initials:'ED',level:'Première S',subjects:['Mathématiques','Français'],enrolled:['t1','t3'],grades:{Mathématiques:[10,11,12,11,13,12,14,13],Français:[13,14,13,15,14,16,15,16]},hwCompleted:16,hwTotal:18,sessionsAttended:26,streak:8},
+  {id:'s3',name:'Hugo Leroy',initials:'HL',level:'Terminale ES',subjects:['Histoire-Géographie','Anglais'],enrolled:['t4','t5'],grades:{['Histoire-Géographie']:[9,10,11,10,12,11,13,12],Anglais:[14,14,15,15,16,15,16,17]},hwCompleted:10,hwTotal:15,sessionsAttended:18,streak:3},
+  {id:'s4',name:'Léa Roux',initials:'LR',level:'Seconde',subjects:['Mathématiques','Anglais'],enrolled:['t1','t5'],grades:{Mathématiques:[8,9,10,9,11,10,12,11],Anglais:[12,13,12,14,13,15,14,15]},hwCompleted:12,hwTotal:16,sessionsAttended:20,streak:4},
+  {id:'s5',name:'Nathan Garcia',initials:'NG',level:'Terminale S',subjects:['Mathématiques','Physique-Chimie'],enrolled:['t1','t2'],grades:{Mathématiques:[14,15,14,16,15,17,16,18],['Physique-Chimie']:[13,14,13,15,14,16,15,17]},hwCompleted:17,hwTotal:18,sessionsAttended:28,streak:12},
+  {id:'s6',name:'Chloé Thomas',initials:'CT',level:'Première L',subjects:['Français','Philosophie'],enrolled:['t3'],grades:{Français:[11,12,13,12,14,13,15,14],Philosophie:[10,11,12,11,13,12,14,13]},hwCompleted:13,hwTotal:17,sessionsAttended:19,streak:6},
+  {id:'s7',name:'Théo Robert',initials:'TR',level:'Terminale S',subjects:['Physique-Chimie'],enrolled:['t2'],grades:{['Physique-Chimie']:[10,11,10,12,11,13,12,14]},hwCompleted:9,hwTotal:14,sessionsAttended:15,streak:2},
+  {id:'s8',name:'Manon Richard',initials:'MR',level:'Première ES',subjects:['Histoire-Géographie','Anglais'],enrolled:['t4','t5'],grades:{['Histoire-Géographie']:[12,13,12,14,13,15,14,15],Anglais:[11,12,13,12,14,13,15,14]},hwCompleted:15,hwTotal:18,sessionsAttended:24,streak:7}
+];
+
+const sessions = [
+  {id:'se1',teacherId:'t1',studentIds:['s1','s5'],subject:'Mathématiques',date:'2026-02-16',time:'17:00',duration:60,status:'completed',topic:'Intégrales — techniques avancées',rating:5,feedback:'Excellente maîtrise des techniques de base. Travailler les intégrales par parties.',zoomId:'845 2367 9012',zoomPwd:'TutoB26',type:'group'},
+  {id:'se2',teacherId:'t3',studentIds:['s2'],subject:'Français',date:'2026-02-17',time:'14:00',duration:60,status:'completed',topic:'Dissertation — méthodologie du plan',rating:4,feedback:'Bonne structure argumentative. Approfondir les transitions.',zoomId:'712 4589 3201',zoomPwd:'FrTuto1',type:'solo'},
+  {id:'se3',teacherId:'t2',studentIds:['s1','s7'],subject:'Physique-Chimie',date:'2026-02-18',time:'16:00',duration:60,status:'completed',topic:'Mécanique newtonienne — exercices',rating:5,feedback:'Très bon niveau. Continuer les exercices de type bac.',zoomId:'923 1567 4830',zoomPwd:'PhyTut',type:'group'},
+  {id:'se4',teacherId:'t4',studentIds:['s3'],subject:'Histoire-Géographie',date:'2026-02-19',time:'18:00',duration:60,status:'completed',topic:'Guerre froide — composition',rating:4,feedback:'Bon travail de synthèse. Revoir les dates clés.',zoomId:'634 7891 2345',zoomPwd:'HGTut1',type:'solo'},
+  {id:'se5',teacherId:'t5',studentIds:['s3','s4','s8'],subject:'Anglais',date:'2026-02-20',time:'17:00',duration:60,status:'completed',topic:'Essay writing — argumentation',rating:5,feedback:'Great progress on structure. Work on vocabulary range.',zoomId:'518 9234 6701',zoomPwd:'EngTut',type:'group'},
+  {id:'se6',teacherId:'t1',studentIds:['s2','s4'],subject:'Mathématiques',date:'2026-02-23',time:'17:00',duration:60,status:'completed',topic:'Suites numériques — convergence',rating:4,feedback:'Comprendre la notion de limite. Exercices supplémentaires fournis.',zoomId:'845 2367 9013',zoomPwd:'TutoB27',type:'group'},
+  {id:'se7',teacherId:'t3',studentIds:['s6'],subject:'Philosophie',date:'2026-02-24',time:'14:00',duration:60,status:'completed',topic:'La liberté — dissertation guidée',rating:5,feedback:'Excellente réflexion. Travailler les références philosophiques.',zoomId:'712 4589 3202',zoomPwd:'PhiTut',type:'solo'},
+  {id:'se8',teacherId:'t2',studentIds:['s5'],subject:'Physique-Chimie',date:'2026-02-25',time:'16:00',duration:60,status:'completed',topic:'Chimie organique — nomenclature',rating:4,feedback:'Bonne compréhension. Revoir les réactions d\'addition.',zoomId:'923 1567 4831',zoomPwd:'ChiTut',type:'solo'},
+  {id:'se9',teacherId:'t5',studentIds:['s8'],subject:'Anglais',date:'2026-02-26',time:'17:00',duration:60,status:'completed',topic:'Oral practice — debate format',rating:5,feedback:'Excellent fluency. Keep reading English articles daily.',zoomId:'518 9234 6702',zoomPwd:'EngTu2',type:'solo'},
+  {id:'se10',teacherId:'t1',studentIds:['s1'],subject:'Mathématiques',date:'2026-02-27',time:'17:00',duration:60,status:'completed',topic:'Probabilités conditionnelles',rating:4,feedback:'Bon travail. Approfondir les exercices avec arbres pondérés.',zoomId:'845 2367 9014',zoomPwd:'TutoB28',type:'solo'},
+  {id:'se11',teacherId:'t4',studentIds:['s3','s8'],subject:'Histoire-Géographie',date:'2026-02-28',time:'18:00',duration:60,status:'completed',topic:'Mondialisation — étude de cas',rating:4,feedback:'Bonne analyse. Travailler les schémas géographiques.',zoomId:'634 7891 2346',zoomPwd:'HGTut2',type:'group'},
+  {id:'se12',teacherId:'t3',studentIds:['s2','s6'],subject:'Français',date:'2026-03-02',time:'14:00',duration:60,status:'completed',topic:'Commentaire composé — Baudelaire',rating:5,feedback:'Analyse stylistique précise. Excellent travail.',zoomId:'712 4589 3203',zoomPwd:'FrTut2',type:'group'},
+  {id:'se13',teacherId:'t1',studentIds:['s1','s2','s4','s5'],subject:'Mathématiques',date:'2026-03-07',time:'17:00',duration:90,status:'confirmed',topic:'Révisions — Bac blanc préparation',zoomId:'845 2367 9015',zoomPwd:'TutoB29',type:'group',notes:'Apportez vos annales 2025. Nous travaillerons sur les exercices de type bac.'},
+  {id:'se14',teacherId:'t2',studentIds:['s1','s7'],subject:'Physique-Chimie',date:'2026-03-08',time:'16:00',duration:60,status:'confirmed',topic:'Ondes mécaniques — TP virtuel',zoomId:'923 1567 4832',zoomPwd:'PhyTu2',type:'group',notes:'Revoir le cours sur les ondes progressives.'},
+  {id:'se15',teacherId:'t5',studentIds:['s3'],subject:'Anglais',date:'2026-03-09',time:'17:00',duration:60,status:'pending',topic:'Reading comprehension — NYT article analysis',zoomId:'518 9234 6703',zoomPwd:'EngTu3',type:'solo',notes:'We\'ll analyze a current events article.'}
+];
+
+const messages = [
+  {id:'m1',from:'t1',to:'s1',fromName:'Mme Dupont',toName:'Lucas',date:'2026-03-05 14:30',text:'Lucas, n\'oublie pas de réviser les intégrales pour samedi. J\'ai mis des exercices supplémentaires dans tes documents.',read:true},
+  {id:'m2',from:'s1',to:'t1',fromName:'Lucas',toName:'Mme Dupont',date:'2026-03-05 15:12',text:'Merci Madame ! J\'ai commencé les exercices, j\'ai une question sur l\'exercice 3.',read:true},
+  {id:'m3',from:'t1',to:'s1',fromName:'Mme Dupont',toName:'Lucas',date:'2026-03-05 15:45',text:'Bonne question ! Pense à poser u = ln(x), ça simplifie l\'intégrale. On en reparle samedi.',read:false},
+  {id:'m4',from:'t3',to:'s2',fromName:'Mme Moreau',toName:'Emma',date:'2026-03-04 10:00',text:'Emma, ton dernier commentaire composé était excellent. Continue comme ça !',read:true},
+  {id:'m5',from:'s2',to:'t3',fromName:'Emma',toName:'Mme Moreau',date:'2026-03-04 10:30',text:'Merci beaucoup ! Votre méthode m\'aide vraiment. J\'ai hâte pour la prochaine séance.',read:true},
+  {id:'m6',from:'t2',to:'s7',fromName:'M. Laurent',toName:'Théo',date:'2026-03-03 16:20',text:'Théo, je t\'ai envoyé des exercices corrigés sur les ondes. Regarde-les avant mardi.',read:false},
+  {id:'m7',from:'t5',to:'s3',fromName:'Mme Petit',toName:'Hugo',date:'2026-03-05 09:00',text:'Hugo, I\'ve shared a great article for our next session. Check your materials!',read:true},
+  {id:'m8',from:'s4',to:'t1',fromName:'Léa',toName:'Mme Dupont',date:'2026-03-04 18:00',text:'Madame, est-ce que je peux rejoindre la session de groupe de samedi ?',read:true},
+  {id:'m9',from:'t1',to:'s4',fromName:'Mme Dupont',toName:'Léa',date:'2026-03-04 18:30',text:'Bien sûr Léa ! Je t\'ajoute au groupe. Tu es déjà inscrite.',read:true},
+  {id:'m10',from:'t4',to:'s8',fromName:'M. Bernard',toName:'Manon',date:'2026-03-05 11:00',text:'Manon, tes fiches de révision sur la mondialisation sont très bien faites. Bravo !',read:false}
+];
+
+const homework = [
+  {id:'h1',teacherId:'t1',teacherName:'Mme Dupont',studentIds:['s1','s2','s4','s5'],subject:'Mathématiques',title:'Exercices — Intégrales par parties',description:'Faire les exercices 1 à 8 page 234 du manuel. Rédiger proprement.',dueDate:'2026-03-07',status:{s1:'submitted',s2:'submitted',s5:'submitted',s4:'pending'}},
+  {id:'h2',teacherId:'t3',teacherName:'Mme Moreau',studentIds:['s2','s6'],subject:'Français',title:'Commentaire composé — Les Fleurs du Mal',description:'Rédiger un commentaire composé de "L\'Albatros" de Baudelaire. 3 pages minimum.',dueDate:'2026-03-10',status:{s2:'pending',s6:'pending'}},
+  {id:'h3',teacherId:'t2',teacherName:'M. Laurent',studentIds:['s1','s7'],subject:'Physique-Chimie',title:'TP — Mesure de vitesse d\'onde',description:'Compléter le compte-rendu de TP avec graphiques et calculs d\'incertitudes.',dueDate:'2026-03-08',status:{s1:'pending',s7:'pending'}},
+  {id:'h4',teacherId:'t4',teacherName:'M. Bernard',studentIds:['s3','s8'],subject:'Histoire-Géographie',title:'Composition — La mondialisation',description:'Composition structurée sur "Les acteurs de la mondialisation". Plan détaillé + introduction rédigée.',dueDate:'2026-03-12',status:{s3:'submitted',s8:'pending'}},
+  {id:'h5',teacherId:'t5',teacherName:'Mme Petit',studentIds:['s3','s4','s8'],subject:'Anglais',title:'Essay — Climate Change Debate',description:'Write a 500-word argumentative essay on climate policy. Use at least 3 sources.',dueDate:'2026-03-11',status:{s3:'pending',s4:'pending',s8:'submitted'}},
+  {id:'h6',teacherId:'t1',teacherName:'Mme Dupont',studentIds:['s1','s5'],subject:'Mathématiques',title:'Annale Bac 2025 — Sujet complet',description:'Faire le sujet complet du bac 2025 en conditions réelles (4h). À rendre corrigé.',dueDate:'2026-03-14',status:{s1:'pending',s5:'pending'}}
+];
+
+const materials = [
+  {id:'mat1',teacherId:'t1',subject:'Mathématiques',title:'Formulaire Intégrales',type:'pdf',desc:'Toutes les formules d\'intégration au programme.',date:'2026-02-20',pinned:true},
+  {id:'mat2',teacherId:'t1',subject:'Mathématiques',title:'Corrigé Bac 2025 — Exercice 4',type:'pdf',desc:'Corrigé détaillé de l\'exercice sur les probabilités.',date:'2026-03-01',pinned:false},
+  {id:'mat3',teacherId:'t3',subject:'Français',title:'Méthode dissertation complète',type:'pdf',desc:'Guide pas à pas pour rédiger une dissertation parfaite.',date:'2026-02-15',pinned:true},
+  {id:'mat4',teacherId:'t3',subject:'Français',title:'Vidéo — Analyse de Baudelaire',type:'video',desc:'Analyse détaillée des procédés stylistiques.',date:'2026-02-28',pinned:false},
+  {id:'mat5',teacherId:'t2',subject:'Physique-Chimie',title:'Fiches ondes mécaniques',type:'pdf',desc:'Résumé complet du chapitre ondes.',date:'2026-03-02',pinned:true},
+  {id:'mat6',teacherId:'t2',subject:'Physique-Chimie',title:'QCM interactif — Chimie organique',type:'quiz',desc:'20 questions pour tester vos connaissances.',date:'2026-03-03',pinned:false},
+  {id:'mat7',teacherId:'t4',subject:'Histoire-Géographie',title:'Chronologie Guerre Froide',type:'pdf',desc:'Frise chronologique illustrée.',date:'2026-02-22',pinned:true},
+  {id:'mat8',teacherId:'t5',subject:'Anglais',title:'Vocabulary List — Environment',type:'pdf',desc:'100 mots essentiels pour le thème environnement.',date:'2026-02-25',pinned:true},
+  {id:'mat9',teacherId:'t5',subject:'Anglais',title:'TED Talk — Climate Change',type:'video',desc:'Watch and take notes on key arguments.',date:'2026-03-04',pinned:false}
+];
+
+const reviews = [
+  {id:'r1',sessionId:'se1',studentId:'s1',teacherId:'t1',rating:5,comment:'Excellente séance ! Les explications sont très claires.',date:'2026-02-16',teacherReply:'Merci Lucas, continue comme ça !'},
+  {id:'r2',sessionId:'se2',studentId:'s2',teacherId:'t3',rating:4,comment:'Très bonne méthodologie. J\'ai enfin compris le plan dialectique.',date:'2026-02-17',teacherReply:'Ravie que ça t\'aide Emma !'},
+  {id:'r3',sessionId:'se5',studentId:'s3',teacherId:'t5',rating:5,comment:'I loved the debate format! Very engaging.',date:'2026-02-20',teacherReply:'Glad you enjoyed it, Hugo!'},
+  {id:'r4',sessionId:'se7',studentId:'s6',teacherId:'t3',rating:5,comment:'La meilleure prof de philo. Méthode Socratique au top.',date:'2026-02-24',teacherReply:''},
+  {id:'r5',sessionId:'se10',studentId:'s1',teacherId:'t1',rating:4,comment:'Bon travail sur les probas. Quelques passages rapides.',date:'2026-02-27',teacherReply:'Je ferai plus de pauses la prochaine fois.'}
+];
+
+const announcements = [
+  {id:'a1',teacherId:'t1',teacherName:'Mme Dupont',subject:'Mathématiques',title:'Bac blanc le 15 mars',text:'Le bac blanc approche ! Session de révision intensive le 7 mars. Inscrivez-vous.',date:'2026-03-03'},
+  {id:'a2',teacherId:'t3',teacherName:'Mme Moreau',subject:'Français',title:'Nouveau planning mars',text:'Mes créneaux changent en mars : lundi et jeudi 14h-16h au lieu de mardi.',date:'2026-03-01'},
+  {id:'a3',teacherId:'t5',teacherName:'Mme Petit',subject:'Anglais',title:'English Movie Night',text:'This Saturday at 20h, optional movie viewing + discussion. DM me to join!',date:'2026-03-04'}
+];
+
+const forumPosts = [
+  {id:'f1',subject:'Mathématiques',authorId:'s1',authorName:'Lucas M.',title:'Aide intégrale avec ln',text:'Comment résoudre ∫ln(x²+1)dx ? Je bloque sur la substitution.',date:'2026-03-05 10:00',answers:[{authorId:'t1',authorName:'Mme Dupont',text:'Essaie une intégration par parties avec u=ln(x²+1) et dv=dx.',date:'2026-03-05 11:30'},{authorId:'s5',authorName:'Nathan G.',text:'J\'ai eu le même problème, la méthode de Mme Dupont marche bien !',date:'2026-03-05 14:00'}]},
+  {id:'f2',subject:'Français',authorId:'s6',authorName:'Chloé T.',title:'Plan dissertation liberté',text:'Pour le sujet "Être libre, est-ce faire ce que l\'on veut ?", j\'hésite entre plan dialectique et thématique.',date:'2026-03-04 09:00',answers:[{authorId:'t3',authorName:'Mme Moreau',text:'Plan dialectique recommandé ici. Thèse : oui en apparence, Antithèse : contraintes sociales/morales, Synthèse : liberté comme autonomie.',date:'2026-03-04 10:00'}]},
+  {id:'f3',subject:'Physique-Chimie',authorId:'s7',authorName:'Théo R.',title:'Ondes progressives — fréquence',text:'Quelqu\'un peut m\'expliquer la différence entre fréquence et période ?',date:'2026-03-03 16:00',answers:[{authorId:'s1',authorName:'Lucas M.',text:'La fréquence f = 1/T. La période T est le temps d\'un cycle complet, la fréquence est le nombre de cycles par seconde.',date:'2026-03-03 17:00'}]}
+];
+
+let notifications = [
+  {id:'n1',type:'session',text:'Session de Mathématiques dans 1 heure',icon:'📅',time:'Il y a 30 min',read:false,bg:'rgba(26,60,255,.1)'},
+  {id:'n2',type:'message',text:'Nouveau message de Mme Dupont',icon:'💬',time:'Il y a 2h',read:false,bg:'rgba(156,100,234,.1)'},
+  {id:'n3',type:'homework',text:'Devoir de Physique-Chimie à rendre demain',icon:'📝',time:'Il y a 3h',read:false,bg:'rgba(245,212,53,.2)'},
+  {id:'n4',type:'feedback',text:'Mme Moreau a laissé un commentaire',icon:'⭐',time:'Hier',read:true,bg:'rgba(29,185,84,.1)'},
+  {id:'n5',type:'session',text:'Session confirmée — Anglais le 9 mars',icon:'✅',time:'Hier',read:true,bg:'rgba(26,60,255,.1)'},
+  {id:'n6',type:'material',text:'Nouveau document ajouté en Mathématiques',icon:'📎',time:'Il y a 2j',read:true,bg:'rgba(245,212,53,.2)'}
+];
+
+const teacherApplications = [
+  {id:'app1',name:'M. Thomas Lefevre',subject:'SVT',status:'pending',date:'2026-03-02',bio:'Certifié SVT, 5 ans d\'expérience.'},
+  {id:'app2',name:'Mme Alice Martin',subject:'SES',status:'pending',date:'2026-03-04',bio:'Agrégée SES, auteure de manuels.'}
+];
+
+// ========== HELPERS ==========
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const getUser = () => S.role === 'teacher' ? teachers[0] : S.role === 'admin' ? {name:'Admin',initials:'AD'} : students[0];
+const formatDate = d => {const p = d.split('-'); return `${p[2]}/${p[1]}/${p[0]}`};
+const dayNames = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+const dayNamesFull = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+const monthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const statusLabel = {pending:'En attente',confirmed:'Confirmée',completed:'Terminée',reviewed:'Évaluée'};
+const statusPill = {pending:'pill-yellow',confirmed:'pill-blue',completed:'pill-green',reviewed:'pill-green'};
+const subjColors = {'Mathématiques':'#1a3cff','Physique-Chimie':'#e53e3e','Français':'#9333ea','Philosophie':'#7c3aed','Histoire-Géographie':'#059669','Anglais':'#f59e0b','SVT':'#10b981','SES':'#6366f1'};
+const starsHTML = (n, interactive=false) => {
+  let h='<span class="stars"'+(interactive?' onclick="handleStarClick(event)"':'')+'>';
+  for(let i=1;i<=5;i++) h+=`<span class="star${i<=n?' filled':''}" data-v="${i}">${i<=n?'★':'☆'}</span>`;
+  return h+'</span>';
+};
+const typeIcon = {pdf:'📄',video:'🎬',quiz:'🧩',link:'🔗'};
+const unreadCount = () => notifications.filter(n=>!n.read).length;
+const getTeacher = id => teachers.find(t=>t.id===id);
+const getStudent = id => students.find(s=>s.id===id);
+
+function getStudentSessions(sid) { return sessions.filter(s=>s.studentIds.includes(sid)); }
+function getTeacherSessions(tid) { return sessions.filter(s=>s.teacherId===tid); }
+function getStudentHomework(sid) { return homework.filter(h=>h.studentIds.includes(sid)); }
+function getTeacherHomework(tid) { return homework.filter(h=>h.teacherId===tid); }
+function getStudentMessages(sid) { return messages.filter(m=>m.from===sid||m.to===sid); }
+function getTeacherMessages(tid) { return messages.filter(m=>m.from===tid||m.to===tid); }
+function getTeacherReviews(tid) { return reviews.filter(r=>r.teacherId===tid); }
+
+// ========== RENDER ENGINE ==========
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = renderSidebar() + `<div class="main-wrapper">${renderTopbar()}<main class="main-content fade-in" id="mc">${renderPage()}</main></div>${S.modal ? renderModal() : ''}${renderBottomNav()}`;
+  afterRender();
+}
+
+function afterRender() {
+  if (S.page === 'progress') initCharts();
+  if (S.page === 'dashboard' && S.role === 'student') initDashboardCharts();
+  if (S.page === 'dashboard' && S.role === 'admin') initAdminCharts();
+  if (S.modal === 'teacher-progress' || S.modal === 'student-detail') initModalCharts();
+}
+
+// ========== SIDEBAR ==========
+function renderSidebar() {
+  const items = S.role === 'student' ? [
+    {icon:'🏠',label:'Tableau de bord',page:'dashboard'},
+    {icon:'📅',label:'Calendrier',page:'calendar'},
+    {icon:'💬',label:'Messages',page:'messages',badge:messages.filter(m=>m.to==='s1'&&!m.read).length||0},
+    {icon:'📚',label:'Documents',page:'materials'},
+    {icon:'📝',label:'Devoirs',page:'homework'},
+    {icon:'📊',label:'Ma progression',page:'progress'},
+    {icon:'👩‍🏫',label:'Mes professeurs',page:'teachers'},
+    {icon:'💡',label:'Forum Q&A',page:'forum'}
+  ] : S.role === 'teacher' ? [
+    {icon:'🏠',label:'Tableau de bord',page:'dashboard'},
+    {icon:'📅',label:'Calendrier',page:'calendar'},
+    {icon:'👨‍🎓',label:'Mes élèves',page:'students-list'},
+    {icon:'💬',label:'Messages',page:'messages',badge:messages.filter(m=>m.to==='t1'&&!m.read).length||0},
+    {icon:'📚',label:'Documents',page:'materials'},
+    {icon:'📝',label:'Devoirs',page:'homework'},
+    {icon:'📊',label:'Progression',page:'progress'},
+    {icon:'📢',label:'Annonces',page:'announcements'},
+    {icon:'💡',label:'Forum Q&A',page:'forum'}
+  ] : [
+    {icon:'🏠',label:'Tableau de bord',page:'dashboard'},
+    {icon:'👩‍🏫',label:'Professeurs',page:'admin-teachers'},
+    {icon:'👨‍🎓',label:'Étudiants',page:'admin-students'},
+    {icon:'📊',label:'Analytique',page:'admin-analytics'},
+    {icon:'⚠️',label:'Litiges',page:'admin-disputes'}
+  ];
+  return `<aside class="sidebar${S.sidebarOpen?' open':''}" id="sidebar">
+    <div class="sidebar-header">
+      <h2>📘 TutoBalzac</h2>
+      <span class="sub">Lycée Honoré de Balzac</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">${S.role==='student'?'Espace Élève':S.role==='teacher'?'Espace Enseignant':'Administration'}</div>
+        ${items.map(i=>`<div class="nav-item${S.page===i.page?' active':''}" onclick="nav('${i.page}')">
+          <span>${i.icon}</span><span>${i.label}</span>${i.badge?`<span class="badge">${i.badge}</span>`:''}
+        </div>`).join('')}
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="role-switcher">
+        <button class="role-btn${S.role==='student'?' active':''}" onclick="setRole('student')">Élève</button>
+        <button class="role-btn${S.role==='teacher'?' active':''}" onclick="setRole('teacher')">Prof</button>
+        <button class="role-btn${S.role==='admin'?' active':''}" onclick="setRole('admin')">Admin</button>
+      </div>
+    </div>
+  </aside>`;
+}
+
+// ========== TOPBAR ==========
+function renderTopbar() {
+  const u = getUser();
+  const uc = unreadCount();
+  return `<header class="topbar">
+    <div class="topbar-left">
+      <button class="hamburger" onclick="toggleSidebar()">☰</button>
+      <h1>${pageTitle()}</h1>
+    </div>
+    <div class="topbar-right">
+      <div style="position:relative">
+        <button class="notif-btn" onclick="toggleNotif()"  title="Notifications">🔔${uc?`<span class="notif-count">${uc}</span>`:''}</button>
+        ${S.notifOpen ? renderNotifDropdown() : ''}
+      </div>
+      <div class="user-pill"><div class="user-avatar">${u.initials||'AD'}</div>${u.name||'Admin'}</div>
+    </div>
+  </header>`;
+}
+
+function pageTitle() {
+  const titles = {dashboard:'Tableau de bord',calendar:'Calendrier',messages:'Messages',materials:'Documents & Ressources',homework:'Devoirs',progress:'Progression',teachers:'Mes Professeurs','students-list':'Mes Élèves',forum:'Forum Q&A',announcements:'Annonces','admin-teachers':'Gestion Professeurs','admin-students':'Gestion Étudiants','admin-analytics':'Analytique','admin-disputes':'Litiges'};
+  return titles[S.page]||'TutoBalzac';
+}
+
+// ========== NOTIFICATIONS ==========
+function renderNotifDropdown() {
+  return `<div class="notif-dropdown">
+    <div class="notif-dropdown-header"><span>Notifications</span><button class="btn btn-sm btn-outline" onclick="markAllRead()">Tout lire</button></div>
+    ${notifications.map(n=>`<div class="notif-item${n.read?'':' unread'}" onclick="readNotif('${n.id}')">
+      <div class="notif-icon" style="background:${n.bg}">${n.icon}</div>
+      <div><div class="notif-text">${n.text}</div><div class="notif-time">${n.time}</div></div>
+    </div>`).join('')}
+  </div>`;
+}
+
+// ========== BOTTOM NAV (MOBILE) ==========
+function renderBottomNav() {
+  const items = S.role==='student'?[
+    {icon:'🏠',page:'dashboard'},{icon:'📅',page:'calendar'},{icon:'💬',page:'messages'},{icon:'📊',page:'progress'},{icon:'📚',page:'materials'}
+  ] : S.role==='teacher'?[
+    {icon:'🏠',page:'dashboard'},{icon:'📅',page:'calendar'},{icon:'👨‍🎓',page:'students-list'},{icon:'💬',page:'messages'},{icon:'📚',page:'materials'}
+  ] : [
+    {icon:'🏠',page:'dashboard'},{icon:'👩‍🏫',page:'admin-teachers'},{icon:'📊',page:'admin-analytics'}
+  ];
+  return `<nav class="bottom-nav">${items.map(i=>`<div class="bottom-nav-item${S.page===i.page?' active':''}" onclick="nav('${i.page}')"><span class="bnav-icon">${i.icon}</span></div>`).join('')}</nav>`;
+}
+
+// ========== PAGE ROUTER ==========
+function renderPage() {
+  switch(S.page) {
+    case 'dashboard': return S.role==='student'?renderStudentDashboard():S.role==='teacher'?renderTeacherDashboard():renderAdminDashboard();
+    case 'calendar': return renderCalendar();
+    case 'messages': return renderMessages();
+    case 'materials': return renderMaterials();
+    case 'homework': return renderHomework();
+    case 'progress': return renderProgress();
+    case 'teachers': return renderTeachers();
+    case 'students-list': return renderStudentsList();
+    case 'forum': return renderForum();
+    case 'announcements': return renderAnnouncements();
+    case 'classroom': return renderClassroom();
+    case 'admin-teachers': return renderAdminTeachers();
+    case 'admin-students': return renderAdminStudents();
+    case 'admin-analytics': return renderAdminAnalytics();
+    case 'admin-disputes': return renderAdminDisputes();
+    default: return '<div class="empty-state"><div class="empty-icon">🔍</div><p>Page non trouvée</p></div>';
+  }
+}
+
+// ================================================================
+// STUDENT DASHBOARD
+// ================================================================
+function renderStudentDashboard() {
+  const u = students[0];
+  const upcoming = sessions.filter(s=>s.studentIds.includes('s1')&&(s.status==='confirmed'||s.status==='pending'));
+  const past = sessions.filter(s=>s.studentIds.includes('s1')&&s.status==='completed').slice(-5).reverse();
+  const hw = getStudentHomework('s1').filter(h=>h.status.s1==='pending');
+  const myTeachers = teachers.filter(t=>u.enrolled.includes(t.id));
+  return `
+    <div class="card-grid grid-4 stagger mb-24">
+      <div class="card stat-card"><div class="stat-value">${u.sessionsAttended}</div><div class="stat-label">Séances suivies</div></div>
+      <div class="card stat-card"><div class="stat-value" style="color:var(--success)">${Math.round(u.hwCompleted/u.hwTotal*100)}%</div><div class="stat-label">Devoirs complétés</div></div>
+      <div class="card stat-card"><div class="stat-value" style="color:var(--yellow)">🔥 ${u.streak}</div><div class="stat-label">Semaines consécutives</div></div>
+      <div class="card stat-card"><div class="stat-value">${myTeachers.length}</div><div class="stat-label">Professeurs</div></div>
+    </div>
+
+    <div class="card-grid grid-2 mb-24">
+      <div class="card">
+        <div class="card-header"><h3 class="section-title">📅 Prochaines séances</h3></div>
+        ${upcoming.length ? upcoming.map(s=>{
+          const t = getTeacher(s.teacherId);
+          return `<div class="flex items-center justify-between mb-16" style="padding:12px;background:var(--bg);border-radius:10px">
+            <div>
+              <div class="font-bold text-sm">${s.subject} — ${s.topic}</div>
+              <div class="text-xs text-muted">${formatDate(s.date)} à ${s.time} · ${t.name} · ${s.duration}min</div>
+              <span class="pill ${statusPill[s.status]} mt-8">${statusLabel[s.status]}</span>
+              ${s.type==='group'?'<span class="pill pill-yellow" style="margin-left:4px">Groupe ('+s.studentIds.length+')</span>':''}
+            </div>
+            <div class="flex gap-8">
+              ${s.status==='confirmed'?`<button class="btn btn-primary btn-sm" onclick="openClassroom('${s.id}')">🎥 Rejoindre</button>`:''}
+              <button class="btn btn-outline btn-sm" onclick="openSessionDetail('${s.id}')">Détails</button>
+            </div>
+          </div>`;
+        }).join('') : '<div class="empty-state"><div class="empty-icon">📅</div><p>Aucune séance prévue</p></div>'}
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="section-title">📊 Aperçu progression</h3></div>
+        <div style="height:200px"><canvas id="dashRadar"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card-grid grid-2 mb-24">
+      <div class="card">
+        <div class="card-header"><h3 class="section-title">📝 Devoirs en attente</h3><span class="pill pill-yellow">${hw.length}</span></div>
+        ${hw.length ? hw.map(h=>`<div class="flex items-center justify-between mb-12" style="padding:10px;background:var(--bg);border-radius:8px">
+          <div><div class="font-bold text-sm">${h.title}</div><div class="text-xs text-muted">${h.subject} · Dû le ${formatDate(h.dueDate)}</div></div>
+          <button class="btn btn-sm btn-success" onclick="submitHomework('${h.id}','s1')">✓ Rendre</button>
+        </div>`).join('') : '<p class="text-sm text-muted">Tous les devoirs sont rendus 🎉</p>'}
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="section-title">👩‍🏫 Mes professeurs</h3></div>
+        ${myTeachers.map(t=>`<div class="flex items-center gap-12 mb-12" style="padding:10px;background:var(--bg);border-radius:8px;cursor:pointer" onclick="openTeacherProfile('${t.id}')">
+          <div class="user-avatar" style="background:${t.color};width:40px;height:40px;font-size:14px">${t.initials}</div>
+          <div class="flex-1"><div class="font-bold text-sm">${t.name}</div><div class="text-xs text-muted">${t.subjects.join(', ')}</div></div>
+          <button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openChat('${t.id}')">💬</button>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3 class="section-title">📜 Historique des séances</h3><button class="btn btn-sm btn-outline" onclick="nav('calendar')">Voir tout</button></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Matière</th><th>Professeur</th><th>Sujet</th><th>Note</th><th>Statut</th><th></th></tr></thead>
+          <tbody>${past.map(s=>{const t=getTeacher(s.teacherId);return `<tr>
+            <td>${formatDate(s.date)}</td><td><span style="color:${subjColors[s.subject]||'var(--ink)'}">${s.subject}</span></td>
+            <td>${t.name}</td><td class="text-sm">${s.topic}</td><td>${starsHTML(s.rating||0)}</td>
+            <td><span class="pill ${statusPill[s.status]}">${statusLabel[s.status]}</span></td>
+            <td><button class="btn btn-sm btn-outline" onclick="openSessionDetail('${s.id}')">🔄 Revoir</button></td>
+          </tr>`;}).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+// ================================================================
+// TEACHER DASHBOARD
+// ================================================================
+function renderTeacherDashboard() {
+  const t = teachers[0];
+  const today = sessions.filter(s=>s.teacherId==='t1'&&s.date==='2026-03-07');
+  const upcoming = sessions.filter(s=>s.teacherId==='t1'&&(s.status==='confirmed'||s.status==='pending'));
+  const completed = sessions.filter(s=>s.teacherId==='t1'&&s.status==='completed');
+  const myStudents = students.filter(st=>st.enrolled.includes('t1'));
+  const earnings = completed.length * t.priceSolo;
+
+  return `
+    <div class="card-grid grid-4 stagger mb-24">
+      <div class="card stat-card"><div class="stat-value">${completed.length}</div><div class="stat-label">Séances complétées</div></div>
+      <div class="card stat-card"><div class="stat-value">${myStudents.length}</div><div class="stat-label">Élèves actifs</div></div>
+      <div class="card stat-card"><div class="stat-value" style="color:var(--success)">${earnings}€</div><div class="stat-label">Revenus ce mois</div></div>
+      <div class="card stat-card"><div class="stat-value">${t.rating}</div><div class="stat-label">Note moyenne ⭐</div></div>
+    </div>
+
+    <div class="card-grid grid-2 mb-24">
+      <div class="card">
+        <div class="card-header"><h3 class="section-title">📅 Planning du jour</h3><span class="pill pill-blue">${today.length} séance(s)</span></div>
+        ${upcoming.map(s=>`<div class="flex items-center justify-between mb-12" style="padding:12px;background:var(--bg);border-radius:10px">
+          <div>
+            <div class="font-bold text-sm">${s.subject} — ${s.topic}</div>
+            <div class="text-xs text-muted">${formatDate(s.date)} à ${s.time} · ${s.duration}min · ${s.studentIds.map(id=>getStudent(id)?.name).join(', ')}</div>
+            <span class="pill ${statusPill[s.status]}">${statusLabel[s.status]}</span>
+            ${s.type==='group'?`<span class="pill pill-yellow" style="margin-left:4px">Groupe (${s.studentIds.length}/6)</span>`:''}
+          </div>
+          <div class="flex gap-8">
+            <button class="btn btn-primary btn-sm" onclick="openClassroom('${s.id}')">🎥 Lancer</button>
+          </div>
+        </div>`).join('')||'<p class="text-sm text-muted">Pas de séance prévue aujourd\'hui</p>'}
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="section-title">👨‍🎓 Suivi des élèves</h3><button class="btn btn-sm btn-outline" onclick="nav('students-list')">Voir tout</button></div>
+        ${myStudents.slice(0,5).map(st=>{
+          const g = st.grades['Mathématiques']||[];
+          const last = g[g.length-1]||0;
+          const prev = g[g.length-2]||0;
+          const trend = last>prev?'↑':last<prev?'↓':'→';
+          const tClass = last>prev?'trend-up':last<prev?'trend-down':'trend-flat';
+          return `<div class="flex items-center gap-12 mb-10" style="padding:8px 10px;background:var(--bg);border-radius:8px;cursor:pointer" onclick="openStudentDetail('${st.id}')">
+            <div class="user-avatar" style="width:36px;height:36px;font-size:12px;background:${subjColors['Mathématiques']}">${st.initials}</div>
+            <div class="flex-1"><div class="font-bold text-sm">${st.name}</div><div class="text-xs text-muted">${st.level} · ${st.sessionsAttended} séances</div></div>
+            <span class="${tClass} font-bold">${trend} ${last}/20</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="card-grid grid-2 mb-24">
+      <div class="card">
+        <div class="card-header"><h3 class="section-title">📎 Documents récents</h3><button class="btn btn-sm btn-primary" onclick="openUploadModal()">+ Ajouter</button></div>
+        ${materials.filter(m=>m.teacherId==='t1').slice(0,3).map(m=>`<div class="flex items-center gap-12 mb-10" style="padding:8px 10px;background:var(--bg);border-radius:8px">
+          <span style="font-size:20px">${typeIcon[m.type]}</span>
+          <div class="flex-1"><div class="font-bold text-sm">${m.title}</div><div class="text-xs text-muted">${m.subject} · ${formatDate(m.date)}</div></div>
+          ${m.pinned?'<span class="pill pill-yellow">📌 Épinglé</span>':''}
+        </div>`).join('')}
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="section-title">💰 Résumé des revenus</h3></div>
+        <div style="padding:16px;background:var(--bg);border-radius:10px;text-align:center">
+          <div style="font-size:36px;font-weight:800;font-family:var(--font-h);color:var(--success)">${earnings}€</div>
+          <div class="text-sm text-muted mt-8">${completed.length} séances × ${t.priceSolo}€ = ${earnings}€</div>
+          <div class="divider"></div>
+          <div class="flex justify-between text-sm"><span>Séances solo</span><span class="font-bold">${t.priceSolo}€/h</span></div>
+          <div class="flex justify-between text-sm mt-8"><span>Séances groupe</span><span class="font-bold">${t.priceGroup}€/élève</span></div>
+          <div class="flex justify-between text-sm mt-8"><span>Pack mensuel</span><span class="font-bold">${t.pricePack}€</span></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ================================================================
+// ADMIN DASHBOARD
+// ================================================================
+function renderAdminDashboard() {
+  const totalSessions = sessions.length;
+  const activeSessions = sessions.filter(s=>s.status==='confirmed'||s.status==='pending').length;
+  const revenue = sessions.filter(s=>s.status==='completed').reduce((sum,s)=>{const t=getTeacher(s.teacherId);return sum+(t?t.priceSolo:30);},0);
+  return `
+    <div class="card-grid grid-4 stagger mb-24">
+      <div class="card stat-card"><div class="stat-value">${teachers.length}</div><div class="stat-label">Professeurs actifs</div></div>
+      <div class="card stat-card"><div class="stat-value">${students.length}</div><div class="stat-label">Étudiants inscrits</div></div>
+      <div class="card stat-card"><div class="stat-value">${totalSessions}</div><div class="stat-label">Total séances</div></div>
+      <div class="card stat-card"><div class="stat-value" style="color:var(--success)">${revenue}€</div><div class="stat-label">Revenus plateforme</div></div>
+    </div>
+
+    <div class="card-grid grid-2 mb-24">
+      <div class="card">
+        <div class="card-header"><h3 class="section-title">📈 Séances par semaine</h3></div>
+        <div class="chart-container"><canvas id="adminLineChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3 class="section-title">📊 Répartition par matière</h3></div>
+        <div class="chart-container"><canvas id="adminPieChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card-grid grid-2 mb-24">
+      <div class="card">
+        <div class="card-header"><h3 class="section-title">✅ Candidatures en attente</h3><span class="pill pill-yellow">${teacherApplications.filter(a=>a.status==='pending').length}</span></div>
+        ${teacherApplications.map(a=>`<div class="flex items-center justify-between mb-12" style="padding:12px;background:var(--bg);border-radius:10px">
+          <div><div class="font-bold text-sm">${a.name}</div><div class="text-xs text-muted">${a.subject} · ${formatDate(a.date)}</div><div class="text-xs text-muted">${a.bio}</div></div>
+          <div class="flex gap-8">
+            ${a.status==='pending'?`<button class="btn btn-sm btn-success" onclick="approveTeacher('${a.id}')">✓ Approuver</button><button class="btn btn-sm btn-danger" onclick="rejectTeacher('${a.id}')">✗ Rejeter</button>`:`<span class="pill ${a.status==='approved'?'pill-green':'pill-red'}">${a.status==='approved'?'Approuvé':'Rejeté'}</span>`}
+          </div>
+        </div>`).join('')}
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3 class="section-title">🏆 Top Professeurs</h3></div>
+        ${teachers.sort((a,b)=>b.rating-a.rating).map((t,i)=>`<div class="flex items-center gap-12 mb-10" style="padding:8px 10px;background:var(--bg);border-radius:8px">
+          <span style="font-size:18px;font-weight:800;color:${i===0?'gold':i===1?'silver':'#cd7f32'};width:24px">${i+1}</span>
+          <div class="user-avatar" style="background:${t.color};width:36px;height:36px;font-size:12px">${t.initials}</div>
+          <div class="flex-1"><div class="font-bold text-sm">${t.name}</div><div class="text-xs text-muted">${t.subjects.join(', ')} · ${t.totalStudents} élèves</div></div>
+          <span class="font-bold">${t.rating} ⭐</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+// ================================================================
+// CALENDAR
+// ================================================================
+function renderCalendar() {
+  return `
+    <div class="flex justify-between items-center mb-16">
+      <div class="tabs">
+        <button class="tab-btn${S.calView==='month'?' active':''}" onclick="S.calView='month';render()">Mois</button>
+        <button class="tab-btn${S.calView==='week'?' active':''}" onclick="S.calView='week';render()">Semaine</button>
+      </div>
+      ${S.role==='teacher'?'<button class="btn btn-primary" onclick="openAvailabilityModal()">⚙️ Gérer disponibilités</button>':'<button class="btn btn-primary" onclick="openBookingModal()">+ Réserver une séance</button>'}
+    </div>
+    ${S.calView==='month' ? renderMonthView() : renderWeekView()}`;
+}
+
+function renderMonthView() {
+  const d = S.calDate;
+  const y = d.getFullYear(), m = d.getMonth();
+  const first = new Date(y,m,1);
+  const startDay = first.getDay();
+  const daysInMonth = new Date(y,m+1,0).getDate();
+  const prevDays = new Date(y,m,0).getDate();
+  const userSessions = S.role==='teacher' ? getTeacherSessions('t1') : getStudentSessions('s1');
+
+  let cells = '';
+  for(let i=0;i<startDay;i++) {
+    const dn = prevDays-startDay+i+1;
+    cells += `<div class="cal-day other-month"><span class="day-num">${dn}</span></div>`;
+  }
+  for(let day=1;day<=daysInMonth;day++) {
+    const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const isToday = dateStr === '2026-03-06';
+    const daySessions = userSessions.filter(s=>s.date===dateStr);
+    cells += `<div class="cal-day${isToday?' today':''}" onclick="calDayClick('${dateStr}')">
+      <span class="day-num">${day}</span>
+      ${daySessions.map(s=>`<div class="cal-event ${s.status}${s.type==='group'?' group':''}" onclick="event.stopPropagation();openSessionDetail('${s.id}')" title="${s.subject} — ${s.time}">${s.time} ${s.subject.slice(0,8)}</div>`).join('')}
+    </div>`;
+  }
+  const remaining = 42 - startDay - daysInMonth;
+  for(let i=1;i<=remaining;i++) cells += `<div class="cal-day other-month"><span class="day-num">${i}</span></div>`;
+
+  return `<div class="calendar">
+    <div class="cal-header">
+      <button class="btn btn-outline btn-sm" onclick="calNav(-1)">← Précédent</button>
+      <h3>${monthNames[m]} ${y}</h3>
+      <button class="btn btn-outline btn-sm" onclick="calNav(1)">Suivant →</button>
+    </div>
+    <div class="cal-grid">
+      ${dayNames.map(d=>`<div class="cal-day-header">${d}</div>`).join('')}
+      ${cells}
+    </div>
+  </div>`;
+}
+
+function renderWeekView() {
+  const today = new Date(2026,2,6);
+  const dayOfWeek = today.getDay();
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - dayOfWeek);
+  const hours = [8,9,10,11,12,13,14,15,16,17,18,19,20];
+  const userSessions = S.role==='teacher' ? getTeacherSessions('t1') : getStudentSessions('s1');
+
+  let headerRow = '<div class="week-time"></div>';
+  for(let d=0;d<7;d++) {
+    const date = new Date(weekStart);
+    date.setDate(weekStart.getDate()+d);
+    const ds = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+    const isToday = ds === '2026-03-06';
+    headerRow += `<div class="cal-day-header" style="${isToday?'color:var(--accent);font-weight:700':''}"><div>${dayNames[d]}</div><div style="font-size:14px;font-weight:700">${date.getDate()}</div></div>`;
+  }
+
+  let grid = '';
+  hours.forEach(h => {
+    grid += `<div class="week-time">${h}h</div>`;
+    for(let d=0;d<7;d++) {
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate()+d);
+      const ds = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+      const slotSessions = userSessions.filter(s=>s.date===ds && parseInt(s.time) === h);
+      grid += `<div class="week-slot">${slotSessions.map(s=>`<div class="week-event" style="height:${s.duration/60*50}px;background:${subjColors[s.subject]||'var(--accent)'}" onclick="openSessionDetail('${s.id}')" title="${s.subject} — ${s.topic}">${s.time} ${s.subject.slice(0,6)}</div>`).join('')}</div>`;
+    }
+  });
+
+  return `<div class="calendar">
+    <div class="cal-header">
+      <h3>Semaine du ${weekStart.getDate()} ${monthNames[weekStart.getMonth()]}</h3>
+    </div>
+    <div class="week-view">${headerRow}${grid}</div>
+  </div>`;
+}
+
+// ================================================================
+// VIRTUAL CLASSROOM
+// ================================================================
+function renderClassroom() {
+  const s = sessions.find(se=>se.id===S.classroomSession);
+  if(!s) return '<div class="empty-state"><div class="empty-icon">🎥</div><p>Aucune séance sélectionnée</p></div>';
+  const t = getTeacher(s.teacherId);
+  const studentsInSession = s.studentIds.map(id=>getStudent(id)).filter(Boolean);
+  const isTeacher = S.role === 'teacher';
+  const handsUp = s.studentIds.filter(id => S.raisedHands[id]);
+
+  return `
+    <div class="flex items-center gap-12 mb-16">
+      <button class="btn btn-outline" onclick="nav('dashboard')">← Retour</button>
+      <div><h2>${s.subject} — ${s.topic}</h2><span class="text-sm text-muted">${formatDate(s.date)} · ${s.time} · ${t.name}</span></div>
+    </div>
+
+    ${s.notes ? `<div class="announce-card mb-16"><strong>📋 Note du professeur :</strong> ${s.notes}</div>` : ''}
+
+    <div class="classroom-layout">
+      <div class="classroom-main">
+        <div class="zoom-placeholder">
+          <div class="zoom-icon">🎥</div>
+          <div style="font-size:18px;font-weight:700">Salle de classe virtuelle</div>
+          <div style="font-size:13px;opacity:.7">Meeting ID: ${s.zoomId} · Mot de passe: ${s.zoomPwd}</div>
+          <a href="https://zoom.us/j/${s.zoomId.replace(/\s/g,'')}" target="_blank" class="btn btn-primary btn-lg" style="margin-top:8px">🎥 Rejoindre sur Zoom</a>
+        </div>
+
+        <div class="classroom-toolbar">
+          <a href="https://zoom.us/j/${s.zoomId.replace(/\s/g,'')}" target="_blank" class="toolbar-btn">🎥 Zoom</a>
+          <button class="toolbar-btn" onclick="document.getElementById('agendaPanel').style.display=document.getElementById('agendaPanel').style.display==='none'?'block':'none'">📋 Agenda</button>
+          ${!isTeacher ? `<button class="toolbar-btn ${S.raisedHands['s1']?'active':''}" onclick="toggleHand()">✋ ${S.raisedHands['s1']?'Main baissée':'Lever la main'}</button>` : ''}
+          ${isTeacher ? `<button class="toolbar-btn" onclick="shareFile('${s.id}')">📎 Partager fichier</button>` : ''}
+          <button class="toolbar-btn danger" onclick="nav('dashboard')">🚪 Quitter</button>
+        </div>
+
+        <div id="agendaPanel" class="card" style="display:none">
+          <h4>📋 Agenda de la séance</h4>
+          <div class="mt-8 text-sm">
+            <div>1. Rappel du cours précédent (10 min)</div>
+            <div>2. ${s.topic} — Explication (20 min)</div>
+            <div>3. Exercices pratiques (20 min)</div>
+            <div>4. Questions/Réponses (10 min)</div>
+          </div>
+        </div>
+
+        ${isTeacher && handsUp.length ? `<div class="card" style="border-left:4px solid var(--yellow)">
+          <h4>✋ Mains levées</h4>
+          <div class="flex gap-8 mt-8">${handsUp.map(id=>{const st=getStudent(id);return `<span class="hand-indicator">${st?.name||id} ✋</span>`;}).join('')}</div>
+        </div>` : ''}
+
+        <div class="card">
+          <h4>🗒️ Notes partagées</h4>
+          <textarea class="shared-notepad mt-8" id="sharedNotes" oninput="S.classroomNotes=this.value" placeholder="Prenez des notes ici...">${S.classroomNotes}</textarea>
+        </div>
+
+        ${isTeacher ? `<div class="card mt-16">
+          <h4>📝 Feedback post-séance</h4>
+          ${studentsInSession.map(st=>`<div class="flex items-center gap-12 mt-12" style="padding:12px;background:var(--bg);border-radius:10px">
+            <div class="user-avatar" style="width:36px;height:36px;font-size:12px">${st.initials}</div>
+            <div class="flex-1">
+              <div class="font-bold text-sm">${st.name}</div>
+              <textarea class="form-textarea mt-8" placeholder="Points forts, axes d'amélioration, devoirs..." rows="2" id="feedback_${st.id}"></textarea>
+            </div>
+            <button class="btn btn-sm btn-success" onclick="submitFeedback('${s.id}','${st.id}')">Envoyer</button>
+          </div>`).join('')}
+        </div>` : `<div class="card mt-16">
+          <h4>⭐ Évaluer cette séance</h4>
+          <div class="mt-8">${starsHTML(0,true)}</div>
+          <textarea class="form-textarea mt-12" id="sessionComment" placeholder="Votre commentaire..."></textarea>
+          <button class="btn btn-primary mt-8" onclick="submitReview('${s.id}')">Envoyer mon avis</button>
+        </div>`}
+      </div>
+
+      <div class="classroom-sidebar">
+        <div class="card">
+          <h4>👥 Participants (${studentsInSession.length + 1})</h4>
+          <div class="mt-8">
+            <div class="flex items-center gap-8 mb-8"><div class="user-avatar" style="width:28px;height:28px;font-size:10px;background:${t.color}">${t.initials}</div><span class="text-sm font-bold">${t.name}</span><span class="pill pill-blue">Prof</span></div>
+            ${studentsInSession.map(st=>`<div class="flex items-center gap-8 mb-8">
+              <div class="user-avatar" style="width:28px;height:28px;font-size:10px">${st.initials}</div>
+              <span class="text-sm">${st.name}</span>
+              ${S.raisedHands[st.id]?'<span title="Main levée">✋</span>':''}
+            </div>`).join('')}
+          </div>
+        </div>
+
+        <div class="qa-panel">
+          <div style="padding:12px;border-bottom:1px solid var(--border)"><h4>💬 Q&A en direct</h4></div>
+          <div class="qa-messages" id="qaMessages">
+            ${S.classroomChat.map(c=>`<div class="chat-msg ${c.fromRole===S.role?'sent':'received'}">
+              <div class="text-xs font-bold mb-4">${c.from}</div>${c.text}
+              <div class="msg-time">${c.time}</div>
+            </div>`).join('')}
+            ${S.classroomChat.length===0?'<div class="text-xs text-muted" style="text-align:center;padding:20px">Posez vos questions ici</div>':''}
+          </div>
+          <div class="qa-input">
+            <input type="text" id="qaInput" placeholder="Votre question..." onkeydown="if(event.key==='Enter')sendQA()">
+            <button class="btn btn-primary btn-sm" onclick="sendQA()">→</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ================================================================
+// MESSAGES
+// ================================================================
+function renderMessages() {
+  const userId = S.role==='teacher'?'t1':'s1';
+  const userMsgs = S.role==='teacher' ? getTeacherMessages('t1') : getStudentMessages('s1');
+  const contacts = {};
+  userMsgs.forEach(m => {
+    const otherId = m.from === userId ? m.to : m.from;
+    const otherName = m.from === userId ? m.toName : m.fromName;
+    if(!contacts[otherId]) contacts[otherId] = {id:otherId,name:otherName,msgs:[],unread:0};
+    contacts[otherId].msgs.push(m);
+    if(!m.read && m.to === userId) contacts[otherId].unread++;
+  });
+  const contactList = Object.values(contacts);
+  const active = contactList[S.selectedChat] || contactList[0];
+
+  return `<div class="chat-container">
+    <div class="chat-sidebar">
+      <div class="chat-sidebar-header">
+        <div class="search-bar"><span>🔍</span><input placeholder="Rechercher..." oninput="S.searchQuery=this.value"></div>
+      </div>
+      <div style="overflow-y:auto;flex:1">
+        ${contactList.map((c,i)=>`<div class="chat-contact${i===S.selectedChat?' active':''}" onclick="S.selectedChat=${i};render()">
+          <div class="contact-avatar">${c.name.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+          <div class="contact-info"><div class="contact-name">${c.name}</div><div class="contact-preview">${c.msgs[c.msgs.length-1]?.text.slice(0,40)||''}...</div></div>
+          ${c.unread?'<div class="unread-dot"></div>':''}
+        </div>`).join('')}
+      </div>
+    </div>
+    <div class="chat-main">
+      <div class="chat-header"><div class="user-avatar" style="width:32px;height:32px;font-size:12px">${active?.name?.split(' ').map(w=>w[0]).join('').slice(0,2)||'?'}</div>${active?.name||'Sélectionner un contact'}</div>
+      <div class="chat-messages" id="chatMessages">
+        ${active ? active.msgs.map(m=>`<div class="chat-msg ${m.from===userId?'sent':'received'}">
+          ${m.text}
+          <div class="msg-time">${m.date.split(' ')[1]||''}</div>
+        </div>`).join('') : '<div class="empty-state"><div class="empty-icon">💬</div><p>Sélectionnez une conversation</p></div>'}
+      </div>
+      <div class="chat-input-area">
+        <input type="text" id="msgInput" placeholder="Votre message..." onkeydown="if(event.key==='Enter')sendMessage()">
+        <button class="btn btn-primary" onclick="sendMessage()">Envoyer</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ================================================================
+// MATERIALS
+// ================================================================
+function renderMaterials() {
+  const allSubjects = [...new Set(materials.map(m=>m.subject))];
+  const filtered = S.searchQuery ? materials.filter(m=>m.title.toLowerCase().includes(S.searchQuery.toLowerCase())||m.subject.toLowerCase().includes(S.searchQuery.toLowerCase())) : materials;
+  const pinned = filtered.filter(m=>m.pinned);
+  const bySubject = {};
+  filtered.forEach(m => { if(!bySubject[m.subject]) bySubject[m.subject]=[]; bySubject[m.subject].push(m); });
+
+  return `
+    <div class="flex justify-between items-center mb-16">
+      <div class="search-bar" style="flex:1;max-width:400px"><span>🔍</span><input placeholder="Rechercher un document..." oninput="S.searchQuery=this.value;render()"></div>
+      ${S.role==='teacher'?'<button class="btn btn-primary" onclick="openUploadModal()">📎 Ajouter un document</button>':''}
+    </div>
+
+    ${pinned.length ? `<div class="card mb-24">
+      <h3 class="section-title">📌 Documents épinglés</h3>
+      <div class="card-grid grid-3 mt-8">${pinned.map(m=>`<div class="card" style="border-left:4px solid ${subjColors[m.subject]||'var(--accent)'}">
+        <div class="flex items-center gap-8 mb-8"><span style="font-size:20px">${typeIcon[m.type]}</span><span class="pill pill-blue">${m.subject}</span></div>
+        <h4>${m.title}</h4>
+        <p class="text-xs text-muted mt-4">${m.desc}</p>
+        <div class="flex justify-between items-center mt-12"><span class="text-xs text-muted">${formatDate(m.date)}</span><button class="btn btn-sm btn-outline">📥 Télécharger</button></div>
+      </div>`).join('')}</div>
+    </div>` : ''}
+
+    ${Object.entries(bySubject).map(([subj,docs])=>`<div class="card mb-16">
+      <div class="card-header"><h3 class="section-title"><span style="color:${subjColors[subj]||'var(--ink)'}">●</span> ${subj}</h3><span class="text-sm text-muted">${docs.length} document(s)</span></div>
+      ${docs.sort((a,b)=>b.date.localeCompare(a.date)).map(m=>`<div class="flex items-center gap-12 mb-10" style="padding:10px;background:var(--bg);border-radius:8px">
+        <span style="font-size:20px">${typeIcon[m.type]}</span>
+        <div class="flex-1"><div class="font-bold text-sm">${m.title}</div><div class="text-xs text-muted">${m.desc}</div></div>
+        <span class="text-xs text-muted">${formatDate(m.date)}</span>
+        <button class="btn btn-sm btn-outline">📥</button>
+      </div>`).join('')}
+    </div>`).join('')}`;
+}
+
+// ================================================================
+// HOMEWORK
+// ================================================================
+function renderHomework() {
+  const userId = S.role==='teacher' ? 't1' : 's1';
+  const hw = S.role==='teacher' ? getTeacherHomework('t1') : getStudentHomework('s1');
+
+  return `
+    <div class="flex justify-between items-center mb-16">
+      <h3>${S.role==='teacher'?'Devoirs envoyés':'Mes devoirs'}</h3>
+      ${S.role==='teacher'?'<button class="btn btn-primary" onclick="openCreateHomeworkModal()">+ Nouveau devoir</button>':''}
+    </div>
+    <div class="stagger">
+    ${hw.map(h=>{
+      const isTeacher = S.role==='teacher';
+      const myStatus = isTeacher ? null : (h.status['s1']||'pending');
+      const submitted = isTeacher ? Object.values(h.status).filter(s=>s==='submitted').length : 0;
+      const total = isTeacher ? h.studentIds.length : 0;
+      const overdue = new Date(h.dueDate) < new Date('2026-03-06') && myStatus==='pending';
+      return `<div class="card mb-16" style="${overdue?'border-left:4px solid var(--danger)':''}">
+        <div class="flex justify-between items-center">
+          <div>
+            <h4>${h.title}</h4>
+            <div class="text-xs text-muted mt-4">${h.subject} · ${h.teacherName} · Dû le ${formatDate(h.dueDate)}</div>
+          </div>
+          <div class="flex items-center gap-8">
+            ${isTeacher ? `<span class="pill pill-blue">${submitted}/${total} rendus</span>` : `<span class="pill ${myStatus==='submitted'?'pill-green':overdue?'pill-red':'pill-yellow'}">${myStatus==='submitted'?'✓ Rendu':overdue?'⚠ En retard':'En attente'}</span>`}
+          </div>
+        </div>
+        <p class="text-sm mt-12">${h.description}</p>
+        <div class="flex justify-between items-center mt-16">
+          ${!isTeacher && myStatus==='pending' ? `<button class="btn btn-success btn-sm" onclick="submitHomework('${h.id}','s1')">📤 Rendre le devoir</button>` : '<span></span>'}
+          ${isTeacher ? `<button class="btn btn-outline btn-sm" onclick="viewHomeworkDetail('${h.id}')">Voir les rendus</button>` : ''}
+        </div>
+      </div>`;
+    }).join('')}
+    </div>`;
+}
+
+// ================================================================
+// PROGRESS
+// ================================================================
+function renderProgress() {
+  if (S.role === 'teacher') return renderTeacherProgress();
+  const u = students[0];
+  const subjects = Object.keys(u.grades);
+  const lastComments = sessions.filter(s=>s.studentIds.includes('s1')&&s.feedback).slice(-5).reverse();
+
+  return `
+    <div class="card-grid grid-3 stagger mb-24">
+      <div class="card stat-card"><div class="streak-badge">🔥 ${u.streak} semaines</div><div class="stat-label mt-8">Série consécutive</div></div>
+      <div class="card stat-card"><div class="stat-value" style="color:var(--success)">${Math.round(u.hwCompleted/u.hwTotal*100)}%</div><div class="stat-label">Devoirs complétés</div><div class="progress-bar mt-8"><div class="fill" style="width:${Math.round(u.hwCompleted/u.hwTotal*100)}%;background:var(--success)"></div></div></div>
+      <div class="card stat-card"><div class="stat-value">${u.sessionsAttended}</div><div class="stat-label">Séances totales</div></div>
+    </div>
+
+    <div class="card-grid grid-2 mb-24">
+      <div class="card">
+        <h3 class="section-title">📊 Performance par matière</h3>
+        <div class="radar-container"><canvas id="radarChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3 class="section-title">📈 Évolution des notes</h3>
+        <div class="chart-container"><canvas id="lineChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card mb-24">
+      <h3 class="section-title">💬 Derniers commentaires des professeurs</h3>
+      ${lastComments.map(s=>{const t=getTeacher(s.teacherId);return `<div class="flex gap-12 mb-16" style="padding:12px;background:var(--bg);border-radius:10px">
+        <div class="user-avatar" style="background:${t?.color||'var(--accent)'};width:40px;height:40px;font-size:14px">${t?.initials||'?'}</div>
+        <div><div class="font-bold text-sm">${t?.name} · ${s.subject}</div><div class="text-xs text-muted">${formatDate(s.date)}</div><p class="text-sm mt-4">${s.feedback}</p></div>
+      </div>`;}).join('')}
+    </div>
+
+    ${subjects.map(subj=>{
+      const grades = u.grades[subj];
+      const avg = (grades.reduce((a,b)=>a+b,0)/grades.length).toFixed(1);
+      const trend = grades[grades.length-1] - grades[grades.length-2];
+      return `<div class="card mb-16">
+        <div class="flex justify-between items-center">
+          <h4 style="color:${subjColors[subj]||'var(--ink)'}">● ${subj}</h4>
+          <div class="flex items-center gap-8"><span class="font-bold">${avg}/20</span><span class="${trend>0?'trend-up':trend<0?'trend-down':'trend-flat'} font-bold">${trend>0?'↑':trend<0?'↓':'→'} ${Math.abs(trend)} pts</span></div>
+        </div>
+        <div class="progress-bar mt-8"><div class="fill" style="width:${avg/20*100}%;background:${subjColors[subj]||'var(--accent)'}"></div></div>
+        <div class="text-xs text-muted mt-4">Dernières notes : ${grades.slice(-4).join(', ')}/20</div>
+      </div>`;
+    }).join('')}`;
+}
+
+function renderTeacherProgress() {
+  const myStudents = students.filter(st=>st.enrolled.includes('t1'));
+  return `
+    <div class="flex justify-between items-center mb-16">
+      <h3>Suivi de mes élèves</h3>
+      <button class="btn btn-outline" onclick="openModal('export-summary')">🖨️ Exporter le résumé</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Élève</th><th>Niveau</th><th>Séances</th><th>Dernière note</th><th>Devoirs rendus</th><th>Tendance</th><th></th></tr></thead>
+        <tbody>${myStudents.map(st=>{
+          const g = st.grades['Mathématiques']||[];
+          const last = g[g.length-1]||0;
+          const prev = g[g.length-2]||0;
+          const trend = last>prev?'↑':last<prev?'↓':'→';
+          const tClass = last>prev?'trend-up':last<prev?'trend-down':'trend-flat';
+          return `<tr onclick="openStudentDetail('${st.id}')" style="cursor:pointer">
+            <td><div class="flex items-center gap-8"><div class="user-avatar" style="width:30px;height:30px;font-size:11px">${st.initials}</div><span class="font-bold">${st.name}</span></div></td>
+            <td>${st.level}</td><td>${st.sessionsAttended}</td><td>${last}/20</td>
+            <td><div class="progress-bar" style="width:80px;display:inline-block"><div class="fill" style="width:${Math.round(st.hwCompleted/st.hwTotal*100)}%;background:var(--success)"></div></div> ${Math.round(st.hwCompleted/st.hwTotal*100)}%</td>
+            <td><span class="${tClass} font-bold">${trend}</span></td>
+            <td><button class="btn btn-sm btn-outline">Détails</button></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+// ================================================================
+// TEACHERS LIST (Student view)
+// ================================================================
+function renderTeachers() {
+  return `
+    <div class="card-grid grid-2 stagger">
+    ${teachers.map(t=>`<div class="card" style="cursor:pointer" onclick="openTeacherProfile('${t.id}')">
+      <div class="flex gap-16">
+        <div class="profile-photo" style="width:80px;height:80px;font-size:32px;background:linear-gradient(135deg,${t.color},${t.color}88)">${t.initials}</div>
+        <div class="flex-1">
+          <h3 style="display:flex;align-items:center;gap:6px">${t.name} ${t.verified?'<span class="verified-badge">✓ Certifié</span>':''}</h3>
+          <div class="text-sm text-muted mt-4">${t.subjects.join(', ')} · ${t.levels.join(', ')}</div>
+          <div class="profile-tags mt-8">${t.style.map(s=>`<span class="tag accent">${s}</span>`).join('')}</div>
+          <div class="flex items-center gap-16 mt-8">
+            <span class="text-sm">${starsHTML(Math.round(t.rating))} <strong>${t.rating}</strong> (${t.reviews})</span>
+            <span class="text-sm font-bold text-accent">${t.priceSolo}€/h</span>
+          </div>
+        </div>
+      </div>
+    </div>`).join('')}
+    </div>`;
+}
+
+// ================================================================
+// STUDENTS LIST (Teacher view)
+// ================================================================
+function renderStudentsList() {
+  const myStudents = students.filter(st=>st.enrolled.includes('t1'));
+  return `
+    <div class="card-grid grid-3 stagger">
+    ${myStudents.map(st=>{
+      const g = st.grades['Mathématiques']||[];
+      const avg = g.length ? (g.reduce((a,b)=>a+b,0)/g.length).toFixed(1) : '—';
+      return `<div class="card" onclick="openStudentDetail('${st.id}')" style="cursor:pointer">
+        <div class="flex items-center gap-12 mb-12">
+          <div class="user-avatar" style="width:48px;height:48px;font-size:16px">${st.initials}</div>
+          <div><h4>${st.name}</h4><div class="text-xs text-muted">${st.level}</div></div>
+        </div>
+        <div class="flex justify-between text-sm"><span>Moyenne</span><span class="font-bold">${avg}/20</span></div>
+        <div class="flex justify-between text-sm mt-4"><span>Séances</span><span class="font-bold">${st.sessionsAttended}</span></div>
+        <div class="flex justify-between text-sm mt-4"><span>Devoirs</span><span class="font-bold">${Math.round(st.hwCompleted/st.hwTotal*100)}%</span></div>
+        <div class="progress-bar mt-8"><div class="fill" style="width:${Math.round(st.hwCompleted/st.hwTotal*100)}%;background:var(--success)"></div></div>
+      </div>`;
+    }).join('')}
+    </div>`;
+}
+
+// ================================================================
+// FORUM
+// ================================================================
+function renderForum() {
+  const subjects = [...new Set(forumPosts.map(p=>p.subject))];
+  const filtered = forumPosts.filter(p=>p.subject===S.forumSubject);
+  return `
+    <div class="tabs mb-16">
+      ${subjects.map(s=>`<button class="tab-btn${S.forumSubject===s?' active':''}" onclick="S.forumSubject='${s}';render()">${s}</button>`).join('')}
+    </div>
+
+    ${S.role!=='admin'?`<div class="card mb-16">
+      <h4>💡 Poser une question</h4>
+      <input class="form-input mt-8" id="forumTitle" placeholder="Titre de votre question">
+      <textarea class="form-textarea mt-8" id="forumText" placeholder="Détaillez votre question..."></textarea>
+      <button class="btn btn-primary mt-8" onclick="postForumQuestion()">Publier</button>
+    </div>`:''}
+
+    ${filtered.map(p=>`<div class="card mb-12">
+      <div class="flex items-center gap-8 mb-8">
+        <div class="user-avatar" style="width:32px;height:32px;font-size:11px">${p.authorName.split(' ').map(w=>w[0]).join('')}</div>
+        <div><span class="font-bold text-sm">${p.authorName}</span><span class="text-xs text-muted" style="margin-left:8px">${p.date}</span></div>
+      </div>
+      <h4>${p.title}</h4>
+      <p class="text-sm mt-4">${p.text}</p>
+      <div class="divider"></div>
+      <div class="text-xs text-muted mb-8">${p.answers.length} réponse(s)</div>
+      ${p.answers.map(a=>`<div class="flex gap-8 mb-8" style="padding:8px 12px;background:var(--bg);border-radius:8px;margin-left:20px">
+        <div class="user-avatar" style="width:24px;height:24px;font-size:9px">${a.authorName.split(' ').map(w=>w[0]).join('')}</div>
+        <div><span class="font-bold text-xs">${a.authorName}</span><span class="text-xs text-muted" style="margin-left:6px">${a.date}</span><p class="text-sm mt-2">${a.text}</p></div>
+      </div>`).join('')}
+      <div class="flex gap-8 mt-8" style="margin-left:20px">
+        <input class="form-input" style="flex:1;padding:6px 10px;font-size:12px" id="reply_${p.id}" placeholder="Votre réponse...">
+        <button class="btn btn-sm btn-primary" onclick="replyForum('${p.id}')">Répondre</button>
+      </div>
+    </div>`).join('')}`;
+}
+
+// ================================================================
+// ANNOUNCEMENTS
+// ================================================================
+function renderAnnouncements() {
+  return `
+    ${S.role==='teacher'?`<div class="card mb-16">
+      <h4>📢 Nouvelle annonce</h4>
+      <input class="form-input mt-8" id="announceTitle" placeholder="Titre">
+      <textarea class="form-textarea mt-8" id="announceText" placeholder="Contenu de l'annonce..."></textarea>
+      <button class="btn btn-primary mt-8" onclick="postAnnouncement()">Publier</button>
+    </div>`:''}
+    ${announcements.map(a=>`<div class="announce-card">
+      <div class="flex justify-between items-center mb-4"><h4>${a.title}</h4><span class="pill pill-blue">${a.subject}</span></div>
+      <p class="text-sm">${a.text}</p>
+      <div class="text-xs text-muted mt-8">${a.teacherName} · ${formatDate(a.date)}</div>
+    </div>`).join('')}`;
+}
+
+// ================================================================
+// ADMIN PAGES
+// ================================================================
+function renderAdminTeachers() {
+  return `
+    <div class="flex justify-between items-center mb-16">
+      <h3>Professeurs (${teachers.length})</h3>
+      <span class="pill pill-yellow">${teacherApplications.filter(a=>a.status==='pending').length} candidature(s) en attente</span>
+    </div>
+    <div class="table-wrap mb-24">
+      <table>
+        <thead><tr><th>Nom</th><th>Matières</th><th>Niveaux</th><th>Note</th><th>Élèves</th><th>Heures</th><th>Statut</th></tr></thead>
+        <tbody>${teachers.map(t=>`<tr>
+          <td><div class="flex items-center gap-8"><div class="user-avatar" style="width:30px;height:30px;font-size:11px;background:${t.color}">${t.initials}</div><span class="font-bold">${t.name}</span></div></td>
+          <td>${t.subjects.join(', ')}</td><td>${t.levels.join(', ')}</td><td>${t.rating} ⭐</td>
+          <td>${t.totalStudents}</td><td>${t.totalHours}h</td>
+          <td><span class="pill pill-green">Actif</span></td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+    <h3 class="mb-16">Candidatures</h3>
+    ${teacherApplications.map(a=>`<div class="card mb-12"><div class="flex items-center justify-between">
+      <div><h4>${a.name}</h4><div class="text-xs text-muted">${a.subject} · ${formatDate(a.date)}</div><p class="text-sm mt-4">${a.bio}</p></div>
+      <div class="flex gap-8">${a.status==='pending'?`<button class="btn btn-sm btn-success" onclick="approveTeacher('${a.id}')">✓ Approuver</button><button class="btn btn-sm btn-danger" onclick="rejectTeacher('${a.id}')">✗ Rejeter</button>`:`<span class="pill ${a.status==='approved'?'pill-green':'pill-red'}">${a.status==='approved'?'Approuvé':'Rejeté'}</span>`}</div>
+    </div></div>`).join('')}`;
+}
+
+function renderAdminStudents() {
+  return `
+    <h3 class="mb-16">Étudiants inscrits (${students.length})</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nom</th><th>Niveau</th><th>Matières</th><th>Séances</th><th>Devoirs</th><th>Série</th></tr></thead>
+        <tbody>${students.map(st=>`<tr>
+          <td><div class="flex items-center gap-8"><div class="user-avatar" style="width:30px;height:30px;font-size:11px">${st.initials}</div><span class="font-bold">${st.name}</span></div></td>
+          <td>${st.level}</td><td>${st.subjects.join(', ')}</td><td>${st.sessionsAttended}</td>
+          <td>${Math.round(st.hwCompleted/st.hwTotal*100)}%</td><td>🔥 ${st.streak}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+function renderAdminAnalytics() {
+  return `
+    <div class="card-grid grid-2 mb-24">
+      <div class="card"><h3 class="section-title">📈 Séances par semaine</h3><div class="chart-container"><canvas id="adminLineChart"></canvas></div></div>
+      <div class="card"><h3 class="section-title">📊 Matières populaires</h3><div class="chart-container"><canvas id="adminPieChart"></canvas></div></div>
+    </div>
+    <div class="card-grid grid-4 mb-24">
+      <div class="card stat-card"><div class="stat-value">${sessions.filter(s=>s.status==='completed').length}</div><div class="stat-label">Séances terminées</div></div>
+      <div class="card stat-card"><div class="stat-value">${sessions.filter(s=>s.status==='confirmed').length}</div><div class="stat-label">Séances à venir</div></div>
+      <div class="card stat-card"><div class="stat-value">${(teachers.reduce((s,t)=>s+t.rating,0)/teachers.length).toFixed(1)}</div><div class="stat-label">Note moyenne profs</div></div>
+      <div class="card stat-card"><div class="stat-value">${Math.round(students.reduce((s,st)=>s+st.hwCompleted/st.hwTotal,0)/students.length*100)}%</div><div class="stat-label">Complétion devoirs moy.</div></div>
+    </div>`;
+}
+
+function renderAdminDisputes() {
+  return `
+    <h3 class="mb-16">Litiges & signalements</h3>
+    <div class="card mb-12" style="border-left:4px solid var(--yellow)">
+      <div class="flex justify-between items-center"><div><h4>Annulation tardive — Lucas M.</h4><div class="text-xs text-muted">Séance du 05/03/2026 annulée à moins de 24h</div></div>
+      <div class="flex gap-8"><button class="btn btn-sm btn-outline" onclick="alert('Avertissement envoyé')">⚠️ Avertir</button><button class="btn btn-sm btn-success" onclick="alert('Résolu')">✓ Résolu</button></div></div>
+    </div>
+    <div class="card mb-12" style="border-left:4px solid var(--danger)">
+      <div class="flex justify-between items-center"><div><h4>Signalement — Qualité de séance</h4><div class="text-xs text-muted">Élève Théo R. signale une séance non préparée le 01/03</div></div>
+      <div class="flex gap-8"><button class="btn btn-sm btn-outline" onclick="alert('Investigation lancée')">🔍 Investiguer</button><button class="btn btn-sm btn-success" onclick="alert('Résolu')">✓ Résolu</button></div></div>
+    </div>
+    <div class="empty-state mt-24"><div class="empty-icon">✅</div><p>Peu de litiges actifs — la plateforme se porte bien !</p></div>`;
+}
+
+// ================================================================
+// MODALS
+// ================================================================
+function renderModal() {
+  switch(S.modal) {
+    case 'teacher-profile': return renderTeacherProfileModal();
+    case 'session-detail': return renderSessionDetailModal();
+    case 'booking': return renderBookingModal();
+    case 'upload': return renderUploadModal();
+    case 'create-homework': return renderCreateHomeworkModal();
+    case 'student-detail': return renderStudentDetailModal();
+    case 'availability': return renderAvailabilityModal();
+    case 'export-summary': return renderExportModal();
+    case 'video-intro': return renderVideoIntroModal();
+    default: return '';
+  }
+}
+
+function renderTeacherProfileModal() {
+  const t = teachers.find(te=>te.id===S.modalData);
+  if(!t) return '';
+  const rev = getTeacherReviews(t.id);
+  return `<div class="modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()" style="max-width:800px">
+    <div class="modal-header"><h2>Profil enseignant</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="profile-hero">
+        <div class="profile-photo" style="background:linear-gradient(135deg,${t.color},${t.color}88)">${t.initials}</div>
+        <div class="profile-info">
+          <h1>${t.name} ${t.verified?'<span class="verified-badge">✓ Enseignant certifié</span>':''}</h1>
+          <p class="text-sm text-muted mt-4">${t.bio}</p>
+          <div class="profile-tags mt-8">
+            ${t.subjects.map(s=>`<span class="tag accent">${s}</span>`).join('')}
+            ${t.levels.map(l=>`<span class="tag">${l}</span>`).join('')}
+          </div>
+          <div class="profile-tags">${t.style.map(s=>`<span class="tag yellow">${s}</span>`).join('')}</div>
+          <div class="flex items-center gap-16 mt-12">
+            ${starsHTML(Math.round(t.rating))} <strong>${t.rating}</strong> (${t.reviews} avis)
+          </div>
+        </div>
+      </div>
+
+      <div class="card-grid grid-4 mb-24">
+        <div class="card stat-card"><div class="stat-value">${t.totalStudents}</div><div class="stat-label">Élèves</div></div>
+        <div class="card stat-card"><div class="stat-value">${t.totalHours}h</div><div class="stat-label">Heures enseignées</div></div>
+        <div class="card stat-card"><div class="stat-value" style="color:var(--success)">${t.avgImprovement}</div><div class="stat-label">Amélioration moy.</div></div>
+        <div class="card stat-card"><div class="stat-value">${t.rating}</div><div class="stat-label">Note ⭐</div></div>
+      </div>
+
+      <div class="card mb-16">
+        <div class="flex items-center gap-8 mb-8"><span style="font-size:20px">🎬</span><h3>Vidéo de présentation</h3></div>
+        <div style="background:var(--bg);border-radius:10px;height:120px;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="S.modal='video-intro';S.modalData='${t.id}';render()">
+          <span style="font-size:40px">▶️</span><span class="text-sm" style="margin-left:8px">Voir la vidéo d'introduction</span>
+        </div>
+      </div>
+
+      <div class="card-grid grid-3 mb-16">
+        <div class="card" style="text-align:center"><h4>Solo</h4><div class="stat-value mt-8">${t.priceSolo}€</div><div class="text-xs text-muted">par heure</div></div>
+        <div class="card" style="text-align:center"><h4>Groupe</h4><div class="stat-value mt-8">${t.priceGroup}€</div><div class="text-xs text-muted">par élève/heure</div></div>
+        <div class="card" style="text-align:center"><h4>Pack mensuel</h4><div class="stat-value mt-8">${t.pricePack}€</div><div class="text-xs text-muted">4 séances/mois</div></div>
+      </div>
+
+      <h3 class="section-title mb-8">📅 Disponibilités</h3>
+      <div class="flex gap-8 flex-wrap mb-16">
+        ${Object.entries(t.avail).map(([day,hours])=>`<div class="card" style="padding:12px;min-width:120px;text-align:center">
+          <div class="font-bold text-sm">${dayNamesFull[day]}</div>
+          <div class="text-xs text-muted mt-4">${hours.map(h=>h+'h').join(', ')}</div>
+        </div>`).join('')}
+      </div>
+
+      <h3 class="section-title mb-8">⭐ Avis des élèves</h3>
+      ${rev.map(r=>{const st=getStudent(r.studentId);return `<div class="card mb-8" style="padding:14px">
+        <div class="flex justify-between items-center"><div class="flex items-center gap-8">${starsHTML(r.rating)}<span class="font-bold text-sm">${st?.name||'Élève'}</span></div><span class="text-xs text-muted">${formatDate(r.date)}</span></div>
+        <p class="text-sm mt-8">${r.comment}</p>
+        ${r.teacherReply?`<div style="margin-left:20px;margin-top:8px;padding:8px 12px;background:var(--bg);border-radius:8px;font-size:13px"><strong>Réponse :</strong> ${r.teacherReply}</div>`:''}
+      </div>`;}).join('')}
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Fermer</button>
+      <button class="btn btn-primary" onclick="closeModal();openChat('${t.id}')">💬 Contacter</button>
+      <button class="btn btn-success" onclick="closeModal();openBookingModal()">📅 Réserver</button>
+    </div>
+  </div></div>`;
+}
+
+function renderSessionDetailModal() {
+  const s = sessions.find(se=>se.id===S.modalData);
+  if(!s) return '';
+  const t = getTeacher(s.teacherId);
+  const studentsInSession = s.studentIds.map(id=>getStudent(id)).filter(Boolean);
+  return `<div class="modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><h2>Détails de la séance</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="flex items-center gap-8 mb-12"><span class="pill" style="background:${subjColors[s.subject]||'var(--bg)'};color:#fff;padding:4px 12px">${s.subject}</span><span class="pill ${statusPill[s.status]}">${statusLabel[s.status]}</span>${s.type==='group'?'<span class="pill pill-yellow">Groupe</span>':''}</div>
+      <h3>${s.topic}</h3>
+      <div class="text-sm text-muted mt-8">${formatDate(s.date)} à ${s.time} · ${s.duration} min</div>
+      <div class="divider"></div>
+      <div class="flex items-center gap-12"><div class="user-avatar" style="background:${t?.color||'var(--accent)'};width:40px;height:40px;font-size:14px">${t?.initials}</div><div><div class="font-bold">${t?.name}</div><div class="text-xs text-muted">${t?.subjects?.join(', ')}</div></div></div>
+      <div class="divider"></div>
+      <h4>👥 Participants</h4>
+      <div class="mt-8">${studentsInSession.map(st=>`<span class="pill pill-blue" style="margin-right:4px">${st.name}</span>`).join('')}</div>
+      ${s.notes ? `<div class="divider"></div><h4>📋 Notes</h4><p class="text-sm mt-4">${s.notes}</p>` : ''}
+      ${s.feedback ? `<div class="divider"></div><h4>💬 Feedback</h4><p class="text-sm mt-4">${s.feedback}</p>` : ''}
+      ${s.rating ? `<div class="divider"></div><h4>⭐ Évaluation</h4><div class="mt-4">${starsHTML(s.rating)}</div>` : ''}
+      ${s.status==='confirmed'||s.status==='pending' ? `<div class="divider"></div>
+        <div class="flex items-center gap-8"><span>🎥 Zoom :</span><code>${s.zoomId}</code><span>·</span><span>Mot de passe : <code>${s.zoomPwd}</code></span></div>` : ''}
+    </div>
+    <div class="modal-footer">
+      ${s.status==='confirmed'?`<button class="btn btn-danger btn-sm" onclick="cancelSession('${s.id}')">Annuler</button>`:''}
+      <button class="btn btn-outline" onclick="closeModal()">Fermer</button>
+      ${s.status==='confirmed'?`<button class="btn btn-primary" onclick="closeModal();openClassroom('${s.id}')">🎥 Rejoindre</button>`:''}
+    </div>
+  </div></div>`;
+}
+
+function renderBookingModal() {
+  return `<div class="modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><h2>Réserver une séance</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Professeur</label><select class="form-select" id="bookTeacher">
+        ${teachers.map(t=>`<option value="${t.id}">${t.name} — ${t.subjects.join(', ')}</option>`).join('')}
+      </select></div>
+      <div class="form-group"><label>Matière</label><select class="form-select" id="bookSubject">
+        ${[...new Set(teachers.flatMap(t=>t.subjects))].map(s=>`<option>${s}</option>`).join('')}
+      </select></div>
+      <div class="form-group"><label>Date</label><input type="date" class="form-input" id="bookDate" min="2026-03-07"></div>
+      <div class="form-group"><label>Heure</label><select class="form-select" id="bookTime">
+        ${[14,15,16,17,18,19].map(h=>`<option value="${h}:00">${h}:00</option>`).join('')}
+      </select></div>
+      <div class="form-group"><label>Type</label><select class="form-select" id="bookType"><option value="solo">Solo</option><option value="group">Groupe (atelier)</option></select></div>
+      <div class="form-group"><label>Sujet / Remarque</label><input class="form-input" id="bookTopic" placeholder="Ex: Révision intégrales..."></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="confirmBooking()">Réserver</button></div>
+  </div></div>`;
+}
+
+function renderUploadModal() {
+  return `<div class="modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><h2>Ajouter un document</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="drop-zone mb-16" onclick="document.getElementById('fileInput').click()">
+        <div style="font-size:40px;margin-bottom:8px">📎</div>
+        <div class="font-bold">Glissez un fichier ici ou cliquez pour sélectionner</div>
+        <div class="text-xs text-muted mt-4">PDF, images, liens vidéo acceptés</div>
+        <input type="file" id="fileInput" style="display:none" onchange="document.querySelector('.drop-zone').innerHTML='<div style=font-size:40px>✅</div><div class=font-bold>Fichier sélectionné</div>'">
+      </div>
+      <div class="form-group"><label>Titre</label><input class="form-input" id="matTitle" placeholder="Nom du document"></div>
+      <div class="form-group"><label>Matière</label><select class="form-select" id="matSubject">
+        ${teachers[0].subjects.map(s=>`<option>${s}</option>`).join('')}
+      </select></div>
+      <div class="form-group"><label>Type</label><select class="form-select" id="matType"><option value="pdf">PDF / Notes</option><option value="video">Lien vidéo</option><option value="quiz">Quiz</option></select></div>
+      <div class="form-group"><label>Description</label><textarea class="form-textarea" id="matDesc" placeholder="Description du document..."></textarea></div>
+      <label class="flex items-center gap-8"><input type="checkbox" id="matPinned"> Épingler ce document</label>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="addMaterial()">Publier</button></div>
+  </div></div>`;
+}
+
+function renderCreateHomeworkModal() {
+  return `<div class="modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><h2>Nouveau devoir</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Titre</label><input class="form-input" id="hwTitle" placeholder="Titre du devoir"></div>
+      <div class="form-group"><label>Matière</label><select class="form-select" id="hwSubject">${teachers[0].subjects.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Description</label><textarea class="form-textarea" id="hwDesc" placeholder="Consignes détaillées..."></textarea></div>
+      <div class="form-group"><label>Date limite</label><input type="date" class="form-input" id="hwDue" min="2026-03-07"></div>
+      <div class="form-group"><label>Élèves assignés</label>
+        <div class="flex flex-wrap gap-8">${students.filter(st=>st.enrolled.includes('t1')).map(st=>`<label class="flex items-center gap-4"><input type="checkbox" value="${st.id}" class="hw-student" checked> ${st.name}</label>`).join('')}</div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="createHomework()">Créer</button></div>
+  </div></div>`;
+}
+
+function renderStudentDetailModal() {
+  const st = students.find(s=>s.id===S.modalData);
+  if(!st) return '';
+  const subjects = Object.keys(st.grades);
+  return `<div class="modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()" style="max-width:800px">
+    <div class="modal-header"><h2>${st.name}</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="flex items-center gap-16 mb-16">
+        <div class="user-avatar" style="width:60px;height:60px;font-size:20px">${st.initials}</div>
+        <div><div class="font-bold">${st.level}</div><div class="text-sm text-muted">${st.subjects.join(', ')}</div><div class="text-sm mt-4">🔥 Série : ${st.streak} semaines</div></div>
+      </div>
+      <div class="card-grid grid-3 mb-16">
+        <div class="card stat-card"><div class="stat-value">${st.sessionsAttended}</div><div class="stat-label">Séances</div></div>
+        <div class="card stat-card"><div class="stat-value" style="color:var(--success)">${Math.round(st.hwCompleted/st.hwTotal*100)}%</div><div class="stat-label">Devoirs</div></div>
+        <div class="card stat-card"><div class="stat-value">${st.streak}</div><div class="stat-label">Série 🔥</div></div>
+      </div>
+      <div class="card mb-16"><h4>📈 Évolution des notes</h4><div class="chart-container" style="height:220px"><canvas id="studentDetailChart"></canvas></div></div>
+      ${subjects.map(subj=>{const g=st.grades[subj];const avg=(g.reduce((a,b)=>a+b,0)/g.length).toFixed(1);return `<div class="flex justify-between items-center mb-8" style="padding:10px;background:var(--bg);border-radius:8px">
+        <span style="color:${subjColors[subj]||'var(--ink)'}">● ${subj}</span>
+        <div class="flex items-center gap-8"><span class="font-bold">${avg}/20</span><div class="progress-bar" style="width:100px"><div class="fill" style="width:${avg/20*100}%;background:${subjColors[subj]||'var(--accent)'}"></div></div></div>
+      </div>`;}).join('')}
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Fermer</button><button class="btn btn-primary" onclick="closeModal();openChat('${st.id}')">💬 Message</button></div>
+  </div></div>`;
+}
+
+function renderAvailabilityModal() {
+  const t = teachers[0];
+  return `<div class="modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><h2>Gérer mes disponibilités</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <p class="text-sm text-muted mb-16">Définissez vos créneaux récurrents. Les élèves pourront réserver sur ces horaires.</p>
+      ${[1,2,3,4,5,6].map(d=>`<div class="flex items-center gap-12 mb-12" style="padding:12px;background:var(--bg);border-radius:10px">
+        <span class="font-bold text-sm" style="width:80px">${dayNamesFull[d]}</span>
+        <div class="flex gap-4 flex-wrap">${[14,15,16,17,18,19,20].map(h=>`<button class="btn btn-sm ${t.avail[d]?.includes(h)?'btn-primary':'btn-outline'}" onclick="toggleAvail(${d},${h})">${h}h</button>`).join('')}</div>
+      </div>`).join('')}
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Fermer</button><button class="btn btn-success" onclick="closeModal()">Enregistrer</button></div>
+  </div></div>`;
+}
+
+function renderExportModal() {
+  const myStudents = students.filter(st=>st.enrolled.includes('t1'));
+  return `<div class="modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()" style="max-width:800px">
+    <div class="modal-header"><h2>📄 Résumé de classe — Export</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body" id="printArea" style="font-family:var(--font-b)">
+      <div style="text-align:center;margin-bottom:24px"><h1 style="font-size:22px">TutoBalzac — Rapport de suivi</h1><p class="text-sm text-muted">${teachers[0].name} · Mathématiques · Mars 2026</p></div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="background:var(--bg)"><th style="padding:8px;text-align:left">Élève</th><th>Niveau</th><th>Séances</th><th>Moy.</th><th>Devoirs</th><th>Tendance</th></tr></thead>
+        <tbody>${myStudents.map(st=>{const g=st.grades['Mathématiques']||[];const avg=g.length?(g.reduce((a,b)=>a+b,0)/g.length).toFixed(1):'—';const last=g[g.length-1]||0;const prev=g[g.length-2]||0;return `<tr style="border-bottom:1px solid var(--border)"><td style="padding:8px">${st.name}</td><td>${st.level}</td><td>${st.sessionsAttended}</td><td>${avg}</td><td>${Math.round(st.hwCompleted/st.hwTotal*100)}%</td><td>${last>prev?'↑':last<prev?'↓':'→'}</td></tr>`;}).join('')}</tbody>
+      </table>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Fermer</button><button class="btn btn-primary" onclick="window.print()">🖨️ Imprimer</button></div>
+  </div></div>`;
+}
+
+function renderVideoIntroModal() {
+  const t = teachers.find(te=>te.id===S.modalData);
+  return `<div class="modal-overlay" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><h2>🎬 ${t?.name||'Professeur'} — Présentation</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body" style="text-align:center;padding:48px">
+      <div style="background:#1a1a2e;border-radius:12px;height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff">
+        <div style="font-size:64px;margin-bottom:12px">▶️</div>
+        <div style="font-size:16px;font-weight:600">Vidéo de présentation</div>
+        <div style="font-size:13px;opacity:.6;margin-top:4px">Durée : 2 min 30</div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="S.modal='teacher-profile';render()">← Retour au profil</button></div>
+  </div></div>`;
+}
+
+// ================================================================
+// EVENT HANDLERS
+// ================================================================
+function nav(page) { S.page = page; S.sidebarOpen = false; S.notifOpen = false; render(); window.scrollTo(0,0); }
+function setRole(role) { S.role = role; S.page = 'dashboard'; S.selectedChat = 0; S.notifOpen = false; render(); }
+function toggleSidebar() { S.sidebarOpen = !S.sidebarOpen; render(); }
+function toggleNotif() { S.notifOpen = !S.notifOpen; render(); }
+function openModal(type, data) { S.modal = type; S.modalData = data; render(); }
+function closeModal() { S.modal = null; S.modalData = null; render(); }
+function openTeacherProfile(id) { S.modal = 'teacher-profile'; S.modalData = id; render(); }
+function openSessionDetail(id) { S.modal = 'session-detail'; S.modalData = id; render(); }
+function openBookingModal() { S.modal = 'booking'; render(); }
+function openUploadModal() { S.modal = 'upload'; render(); }
+function openCreateHomeworkModal() { S.modal = 'create-homework'; render(); }
+function openStudentDetail(id) { S.modal = 'student-detail'; S.modalData = id; render(); }
+function openAvailabilityModal() { S.modal = 'availability'; render(); }
+function openClassroom(sessionId) { S.classroomSession = sessionId; S.classroomChat = []; S.page = 'classroom'; S.modal = null; render(); }
+function openChat(contactId) { S.page = 'messages'; S.modal = null; render(); }
+function calNav(dir) { S.calDate = new Date(S.calDate.getFullYear(), S.calDate.getMonth() + dir, 1); render(); }
+function calDayClick(dateStr) { if(S.role==='student') openBookingModal(); }
+function markAllRead() { notifications.forEach(n=>n.read=true); render(); }
+function readNotif(id) { const n = notifications.find(x=>x.id===id); if(n) n.read = true; render(); }
+
+function confirmBooking() {
+  const tid = $('#bookTeacher')?.value || 't1';
+  const subj = $('#bookSubject')?.value || 'Mathématiques';
+  const date = $('#bookDate')?.value || '2026-03-10';
+  const time = $('#bookTime')?.value || '17:00';
+  const type = $('#bookType')?.value || 'solo';
+  const topic = $('#bookTopic')?.value || 'Séance de tutorat';
+  const t = getTeacher(tid);
+  sessions.push({
+    id: 'se' + (sessions.length + 1), teacherId: tid, studentIds: ['s1'], subject: subj,
+    date, time, duration: 60, status: 'pending', topic, type,
+    zoomId: `${Math.floor(Math.random()*900+100)} ${Math.floor(Math.random()*9000+1000)} ${Math.floor(Math.random()*9000+1000)}`,
+    zoomPwd: 'Tuto' + Math.floor(Math.random()*100), notes: ''
+  });
+  notifications.unshift({id:'n'+Date.now(),type:'session',text:`Réservation envoyée — ${subj} avec ${t?.name}`,icon:'📅',time:'À l\'instant',read:false,bg:'rgba(26,60,255,.1)'});
+  closeModal();
+}
+
+function cancelSession(id) {
+  const s = sessions.find(se=>se.id===id);
+  if(s) { s.status = 'completed'; notifications.unshift({id:'n'+Date.now(),type:'session',text:'Séance annulée',icon:'❌',time:'À l\'instant',read:false,bg:'rgba(229,62,62,.1)'}); }
+  closeModal();
+}
+
+function submitHomework(hid, sid) {
+  const h = homework.find(x=>x.id===hid);
+  if(h && h.status[sid]) { h.status[sid] = 'submitted'; notifications.unshift({id:'n'+Date.now(),type:'homework',text:`Devoir "${h.title}" rendu !`,icon:'✅',time:'À l\'instant',read:false,bg:'rgba(29,185,84,.1)'}); render(); }
+}
+
+function sendMessage() {
+  const input = $('#msgInput');
+  if (!input || !input.value.trim()) return;
+  const userId = S.role === 'teacher' ? 't1' : 's1';
+  const u = getUser();
+  const contactList = Object.values(getContacts());
+  const active = contactList[S.selectedChat];
+  if (!active) return;
+  messages.push({
+    id: 'm' + Date.now(), from: userId, to: active.id,
+    fromName: u.name, toName: active.name,
+    date: '2026-03-06 ' + new Date().toTimeString().slice(0,5),
+    text: input.value.trim(), read: false
+  });
+  render();
+  setTimeout(() => { const el = $('#chatMessages'); if(el) el.scrollTop = el.scrollHeight; }, 50);
+}
+
+function getContacts() {
+  const userId = S.role==='teacher'?'t1':'s1';
+  const userMsgs = S.role==='teacher' ? getTeacherMessages('t1') : getStudentMessages('s1');
+  const contacts = {};
+  userMsgs.forEach(m => {
+    const otherId = m.from === userId ? m.to : m.from;
+    const otherName = m.from === userId ? m.toName : m.fromName;
+    if(!contacts[otherId]) contacts[otherId] = {id:otherId,name:otherName,msgs:[],unread:0};
+    contacts[otherId].msgs.push(m);
+    if(!m.read && m.to === userId) contacts[otherId].unread++;
+  });
+  return contacts;
+}
+
+function sendQA() {
+  const input = $('#qaInput');
+  if (!input || !input.value.trim()) return;
+  const u = getUser();
+  S.classroomChat.push({ from: u.name, fromRole: S.role, text: input.value.trim(), time: new Date().toTimeString().slice(0,5) });
+  render();
+  setTimeout(() => { const el = $('#qaMessages'); if(el) el.scrollTop = el.scrollHeight; }, 50);
+}
+
+function toggleHand() {
+  S.raisedHands['s1'] = !S.raisedHands['s1'];
+  render();
+}
+
+function shareFile(sessionId) {
+  notifications.unshift({id:'n'+Date.now(),type:'material',text:'Document partagé en séance',icon:'📎',time:'À l\'instant',read:false,bg:'rgba(245,212,53,.2)'});
+  render();
+}
+
+function submitFeedback(sessionId, studentId) {
+  const textarea = $(`#feedback_${studentId}`);
+  if(!textarea || !textarea.value.trim()) return;
+  const s = sessions.find(se=>se.id===sessionId);
+  if(s) { s.feedback = textarea.value.trim(); s.status = 'completed'; }
+  notifications.unshift({id:'n'+Date.now(),type:'feedback',text:`Feedback envoyé pour ${getStudent(studentId)?.name}`,icon:'📝',time:'À l\'instant',read:false,bg:'rgba(29,185,84,.1)'});
+  render();
+}
+
+function submitReview(sessionId) {
+  const stars = $$('.stars .star.filled');
+  const comment = $('#sessionComment')?.value || '';
+  const rating = stars.length;
+  if(rating === 0) return;
+  const s = sessions.find(se=>se.id===sessionId);
+  if(s) { s.rating = rating; s.status = 'reviewed'; }
+  reviews.push({ id:'r'+Date.now(), sessionId, studentId:'s1', teacherId:s?.teacherId, rating, comment, date:'2026-03-06', teacherReply:'' });
+  notifications.unshift({id:'n'+Date.now(),type:'feedback',text:'Évaluation envoyée !',icon:'⭐',time:'À l\'instant',read:false,bg:'rgba(245,212,53,.2)'});
+  render();
+}
+
+function handleStarClick(e) {
+  const v = parseInt(e.target.dataset.v);
+  if(!v) return;
+  const starsEl = e.target.closest('.stars');
+  starsEl.querySelectorAll('.star').forEach((s,i) => {
+    s.classList.toggle('filled', i < v);
+    s.textContent = i < v ? '★' : '☆';
+  });
+}
+
+function addMaterial() {
+  const title = $('#matTitle')?.value || 'Nouveau document';
+  const subject = $('#matSubject')?.value || 'Mathématiques';
+  const type = $('#matType')?.value || 'pdf';
+  const desc = $('#matDesc')?.value || '';
+  const pinned = $('#matPinned')?.checked || false;
+  materials.push({ id:'mat'+Date.now(), teacherId:'t1', subject, title, type, desc, date:'2026-03-06', pinned });
+  closeModal();
+}
+
+function createHomework() {
+  const title = $('#hwTitle')?.value || 'Nouveau devoir';
+  const subject = $('#hwSubject')?.value || 'Mathématiques';
+  const desc = $('#hwDesc')?.value || '';
+  const due = $('#hwDue')?.value || '2026-03-15';
+  const checkedStudents = [...document.querySelectorAll('.hw-student:checked')].map(el=>el.value);
+  const status = {};
+  checkedStudents.forEach(id => status[id] = 'pending');
+  homework.push({ id:'h'+Date.now(), teacherId:'t1', teacherName:teachers[0].name, studentIds:checkedStudents, subject, title, description:desc, dueDate:due, status });
+  closeModal();
+}
+
+function postForumQuestion() {
+  const title = $('#forumTitle')?.value;
+  const text = $('#forumText')?.value;
+  if(!title || !text) return;
+  const u = getUser();
+  forumPosts.push({ id:'f'+Date.now(), subject:S.forumSubject, authorId:S.role==='teacher'?'t1':'s1', authorName:u.name.split(' ').slice(0,1)+' '+u.name.split(' ').pop()[0]+'.', title, text, date:new Date().toISOString().slice(0,16).replace('T',' '), answers:[] });
+  render();
+}
+
+function replyForum(postId) {
+  const input = $(`#reply_${postId}`);
+  if(!input || !input.value.trim()) return;
+  const u = getUser();
+  const post = forumPosts.find(p=>p.id===postId);
+  if(post) { post.answers.push({ authorId:S.role==='teacher'?'t1':'s1', authorName:u.name.split(' ')[0]+' '+u.name.split(' ').pop()[0]+'.', text:input.value.trim(), date:new Date().toISOString().slice(0,16).replace('T',' ') }); }
+  render();
+}
+
+function postAnnouncement() {
+  const title = $('#announceTitle')?.value;
+  const text = $('#announceText')?.value;
+  if(!title || !text) return;
+  announcements.unshift({ id:'a'+Date.now(), teacherId:'t1', teacherName:teachers[0].name, subject:teachers[0].subjects[0], title, text, date:'2026-03-06' });
+  render();
+}
+
+function approveTeacher(id) {
+  const app = teacherApplications.find(a=>a.id===id);
+  if(app) app.status = 'approved';
+  render();
+}
+function rejectTeacher(id) {
+  const app = teacherApplications.find(a=>a.id===id);
+  if(app) app.status = 'rejected';
+  render();
+}
+
+function toggleAvail(day, hour) {
+  const t = teachers[0];
+  if(!t.avail[day]) t.avail[day] = [];
+  const idx = t.avail[day].indexOf(hour);
+  if(idx > -1) t.avail[day].splice(idx, 1);
+  else t.avail[day].push(hour);
+  t.avail[day].sort((a,b)=>a-b);
+  render();
+}
+
+function viewHomeworkDetail(hid) {
+  const h = homework.find(x=>x.id===hid);
+  if(!h) return;
+  let detail = h.studentIds.map(sid => {
+    const st = getStudent(sid);
+    return `${st?.name||sid}: ${h.status[sid]==='submitted'?'✅ Rendu':'⏳ En attente'}`;
+  }).join('\n');
+  alert(detail);
+}
+
+// ================================================================
+// CHARTS
+// ================================================================
+function initCharts() {
+  // Radar
+  const radarEl = document.getElementById('radarChart');
+  if (radarEl) {
+    const u = students[0];
+    const subjects = Object.keys(u.grades);
+    const avgs = subjects.map(s => { const g = u.grades[s]; return g.reduce((a,b)=>a+b,0)/g.length; });
+    new Chart(radarEl, {
+      type: 'radar',
+      data: { labels: subjects, datasets: [{ label: 'Moyenne', data: avgs, borderColor: '#1a3cff', backgroundColor: 'rgba(26,60,255,.15)', pointBackgroundColor: '#1a3cff', pointBorderColor: '#fff', pointBorderWidth: 2 }] },
+      options: { responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 20, ticks: { stepSize: 4, font: { size: 11 } }, pointLabels: { font: { size: 12, family: 'Instrument Sans' } } } }, plugins: { legend: { display: false } } }
+    });
+  }
+
+  // Line
+  const lineEl = document.getElementById('lineChart');
+  if (lineEl) {
+    const u = students[0];
+    const subjects = Object.keys(u.grades);
+    const datasets = subjects.map(s => ({
+      label: s, data: u.grades[s], borderColor: subjColors[s] || '#1a3cff',
+      backgroundColor: 'transparent', tension: 0.3, pointRadius: 4, pointBorderWidth: 2
+    }));
+    new Chart(lineEl, {
+      type: 'line',
+      data: { labels: ['S1','S2','S3','S4','S5','S6','S7','S8'], datasets },
+      options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 20, ticks: { stepSize: 4 } } }, plugins: { legend: { position: 'bottom', labels: { font: { size: 11, family: 'Instrument Sans' } } } } }
+    });
+  }
+}
+
+function initDashboardCharts() {
+  const el = document.getElementById('dashRadar');
+  if (!el) return;
+  const u = students[0];
+  const subjects = Object.keys(u.grades);
+  const avgs = subjects.map(s => { const g = u.grades[s]; return g.reduce((a,b)=>a+b,0)/g.length; });
+  new Chart(el, {
+    type: 'radar',
+    data: { labels: subjects, datasets: [{ label: 'Moyenne', data: avgs, borderColor: '#1a3cff', backgroundColor: 'rgba(26,60,255,.12)', pointBackgroundColor: '#1a3cff' }] },
+    options: { responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 20, ticks: { stepSize: 5, font:{size:10} }, pointLabels: { font: { size: 11 } } } }, plugins: { legend: { display: false } } }
+  });
+}
+
+function initAdminCharts() {
+  const lineEl = document.getElementById('adminLineChart');
+  if (lineEl) {
+    new Chart(lineEl, {
+      type: 'line',
+      data: { labels: ['Sem 1','Sem 2','Sem 3','Sem 4','Sem 5','Sem 6','Sem 7','Sem 8'], datasets: [{ label: 'Séances', data: [4,6,5,8,7,9,8,10], borderColor: '#1a3cff', backgroundColor: 'rgba(26,60,255,.1)', fill: true, tension: 0.4 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+  }
+  const pieEl = document.getElementById('adminPieChart');
+  if (pieEl) {
+    const subjectCounts = {};
+    sessions.forEach(s => { subjectCounts[s.subject] = (subjectCounts[s.subject]||0)+1; });
+    new Chart(pieEl, {
+      type: 'doughnut',
+      data: { labels: Object.keys(subjectCounts), datasets: [{ data: Object.values(subjectCounts), backgroundColor: Object.keys(subjectCounts).map(s=>subjColors[s]||'#999') }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 11, family: 'Instrument Sans' } } } } }
+    });
+  }
+}
+
+function initModalCharts() {
+  const el = document.getElementById('studentDetailChart');
+  if (!el) return;
+  const st = students.find(s=>s.id===S.modalData);
+  if (!st) return;
+  const subjects = Object.keys(st.grades);
+  const datasets = subjects.map(s => ({
+    label: s, data: st.grades[s], borderColor: subjColors[s]||'#1a3cff',
+    backgroundColor: 'transparent', tension: 0.3, pointRadius: 3
+  }));
+  new Chart(el, {
+    type: 'line',
+    data: { labels: ['S1','S2','S3','S4','S5','S6','S7','S8'], datasets },
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 20 } }, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } } }
+  });
+}
+
+// ========== INIT ==========
+// Automated session reminders
+function checkReminders() {
+  const upcoming = sessions.filter(s=>s.status==='confirmed');
+  // Simulated — in a real app, check actual time difference
+}
+
+// Start the app
+render();
+setInterval(checkReminders, 60000);
+
+// Close sidebar on outside click (mobile)
+document.addEventListener('click', function(e) {
+  if (S.sidebarOpen && !e.target.closest('.sidebar') && !e.target.closest('.hamburger')) {
+    S.sidebarOpen = false;
+    render();
+  }
+});
+</script>
+</body>
+</html>
